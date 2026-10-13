@@ -2,8 +2,8 @@
 
 原生HTML/CSS/JavaScript静态网站，无安装与构建依赖。18天原始行程数据保留在 `dist/assets/data.js`，包括地图、活动、航班、住宿、备忘、路线备选和时区提示。
 
-- `dist/index.html`：摄影首页、每日摘要和可展开详情；首页直接进入行程，路线地图在独立入口保留。
-- `dist/assets/journal.js` / `journal.css`：增量界面与交互；原实用功能在 `app.js`。
+- `dist/index.html`：独立摄影首页；今日路书、全部行程、地图、工具箱四个主入口。每日完整时间线默认可见，补充资料折叠。
+- `dist/assets/journal.js` / `journal.css`：共享物理弹簧滑块与照片查看器。`trip-model.js`负责真实日期、时区与方案模型；`product.js`为唯一页面和弹层控制器，`product-views.js`、`product-map.js`负责界面和本地地图；原实用功能保留在 `app.js`。
 - `dist/offline.html`：原完整单文件离线版，下载后直接打开。
 - `dist/compat.html`：无需脚本的完整阅读版。
 - `dist/share/wechat-2026.jpg`：600×600微信接口用方图。
@@ -22,3 +22,13 @@ GitHub Pages：保留现有仓库，提交本项目至main，在Settings → Pag
 
 正式网址：https://leizheqi-star.github.io/norway-iceland-trip-map/ 。发布来源使用 GitHub Actions，避免旧分支发布流程覆盖新版。原仓库地图保存在 legacy/index.html，文件未删除。
 
+
+## 产品版更新（2026-10-13）
+
+今日按计划所在地时区计算：出发前显示倒计时与首日预览，旅行结束后显示结束状态与末日回顾。当前/下一项仅使用原计划明确时间；不声称活动实际开始或完成。A/B、火车/出租车方案同步更新时间线和地图，选择与清单保存在本机。
+
+地图直接打开，Leaflet和地理边界在本站加载，不依赖外部地图瓦片；示意连线不等于驾车路线。地点与列表联动，外部导航可选Google Maps或Apple Maps。哈希地址支持直接分享和刷新，旧overview/orders/memo地址仍有兼容入口。
+
+`dist/essentials.html` 是约53KB、无外部依赖的关键资料页，可打印或保存。`dist/sw.js` + `offline-manifest.json` 提供按版本缓存、14项关键资源逐项核验和更新提示；微信可能不支持或保留缓存，须在同一浏览器断网验证。照片仅浏览后缓存，不承诺所有照片离线可用。原完整离线文件保留。
+
+构建时自动运行 `scripts/build-essentials.py`，从未改动的data.js生成精简资料和版本摘要。修改源码后推送main即可自动发布，无需Node构建或付费账号。勿把私人票据、订单编号、证件、个人联系方式或密钥加入公开数据及附件。
