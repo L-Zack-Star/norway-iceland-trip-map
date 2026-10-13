@@ -2,7 +2,7 @@
 
 原生HTML/CSS/JavaScript静态网站，无安装与构建依赖。18天原始行程数据保留在 `dist/assets/data.js`，包括地图、活动、航班、住宿、备忘、路线备选和时区提示。
 
-- `dist/index.html`：摄影首页、全程概览、每日摘要和可展开详情。
+- `dist/index.html`：摄影首页、每日摘要和可展开详情；首页直接进入行程，路线地图在独立入口保留。
 - `dist/assets/journal.js` / `journal.css`：增量界面与交互；原实用功能在 `app.js`。
 - `dist/offline.html`：原完整单文件离线版，下载后直接打开。
 - `dist/compat.html`：无需脚本的完整阅读版。
@@ -19,3 +19,6 @@ GitHub Pages：保留现有仓库，提交本项目至main，在Settings → Pag
 微信：没有公众号接口权限、安全域名配置或可信签名服务时，不加载JS-SDK，不承诺自定义卡片。HTML静态元信息可供爬虫读取；方图仅用于具备授权的 `updateAppMessageShareData` / `updateTimelineShareData` 配置，不伪造额外微信元标签。真正接入仍需核实公众号分享接口权限、JS接口安全域名及验证文件部署权、完整URL签名和安全保存AppSecret的服务。纯静态公开仓库不能保存AppSecret。
 
 支持原生Web Share API，失败时复制链接；微信内引导右上角菜单。无真实iOS/Android微信、Safari或中国大陆无VPN网络测试条件，不将UA模拟或本地Chrome测试视为上述场景通过。
+
+正式网址：https://leizheqi-star.github.io/norway-iceland-trip-map/ 。发布来源使用 GitHub Actions，避免旧分支发布流程覆盖新版。原仓库地图保存在 legacy/index.html，文件未删除。
+
