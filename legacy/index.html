@@ -1,0 +1,2523 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>挪威冰岛行程地图</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    :root {
+      --bg:#f4f7fb; --panel:#fff; --ink:#182033; --muted:#667085; --line:#d9e2ef;
+      --blue:#1677ff; --green:#16865a; --orange:#b45309; --red:#b42318; --cyan:#087990;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif; }
+    .app { display:grid; grid-template-columns:minmax(380px, 470px) 1fr; min-height:100vh; }
+    aside { height:100vh; overflow:auto; padding:18px; border-right:1px solid var(--line); background:rgba(255,255,255,.95); }
+    #map { height:100vh; }
+    h1 { margin:0 0 6px; font-size:25px; letter-spacing:0; }
+    .subtitle { margin:0 0 14px; color:var(--muted); line-height:1.45; }
+    .toolbar { display:flex; gap:8px; align-items:center; margin:12px 0; }
+    .toolbar input { flex:1; border:1px solid var(--line); border-radius:8px; padding:9px 10px; font-size:14px; }
+    .tabs { display:flex; gap:8px; overflow:auto; padding:0 0 10px; }
+    .tabs button { border:1px solid var(--line); background:#fff; border-radius:8px; min-width:54px; padding:8px 9px; cursor:pointer; color:var(--ink); }
+    .tabs button.active { background:var(--blue); border-color:var(--blue); color:#fff; }
+    .day-head { position:sticky; top:0; z-index:2; background:rgba(255,255,255,.96); border-bottom:1px solid var(--line); padding:10px 0; }
+    .day-title { font-size:18px; font-weight:800; margin-bottom:5px; }
+    .sun { display:flex; gap:8px; flex-wrap:wrap; color:var(--muted); font-size:13px; }
+    .chip { display:inline-flex; align-items:center; gap:5px; border:1px solid var(--line); border-radius:999px; padding:4px 8px; background:#fff; }
+    .route-link { color:var(--blue); text-decoration:none; }
+    .item { background:#fff; border:1px solid var(--line); border-radius:8px; padding:12px; margin:10px 0; box-shadow:0 8px 18px rgba(23,32,51,.06); }
+    .item.hidden { display:none; }
+    .item-top { display:flex; justify-content:space-between; gap:10px; align-items:flex-start; }
+    .name { font-weight:800; line-height:1.25; }
+    .title { color:var(--muted); font-size:13px; margin-top:2px; }
+    .time { color:var(--blue); font-weight:800; white-space:nowrap; }
+    .desc { color:#344054; line-height:1.5; margin:9px 0; }
+    .meta { color:var(--muted); font-size:13px; line-height:1.45; margin:8px 0 0; }
+    .status { font-weight:700; }
+    .status.verified { color:var(--green); }
+    .status.open-area { color:var(--cyan); }
+    .status.seasonal, .status.reservation, .status.listing { color:var(--orange); }
+    .status.unverified, .status.closed-risk { color:var(--red); }
+    .actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+    .actions a { color:var(--blue); text-decoration:none; border:1px solid #b9d6ff; border-radius:8px; padding:7px 9px; background:#f7fbff; font-size:13px; }
+    .legend { display:grid; grid-template-columns:1fr 1fr; gap:7px; color:var(--muted); font-size:12px; margin:8px 0 12px; }
+    .leaflet-popup-content { font-family:"Microsoft YaHei", sans-serif; }
+    @media (max-width: 860px) {
+      .app { grid-template-columns:1fr; }
+      aside { height:58vh; border-right:0; border-bottom:1px solid var(--line); }
+      #map { height:42vh; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside>
+      <h1>挪威冰岛行程地图</h1>
+      <p class="subtitle">2026-10-18 至 2026-11-03。以你的表格和现有路书为底，加入日出日落、营业/关门状态和 Google Maps 跳转。未来营业时间会变，橙色/红色状态请出发前复核。</p>
+      <div class="legend">
+        <span>绿色：较明确</span><span>蓝绿：开放区域</span>
+        <span>橙色：季节/预约复核</span><span>红色：未核实/风险</span>
+      </div>
+      <div class="toolbar"><input id="search" placeholder="搜索日期、城市、景点、酒店" /></div>
+      <div class="tabs" id="tabs"></div>
+      <div id="timeline"></div>
+    </aside>
+    <main id="map"></main>
+  </div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const DAYS = [
+  {
+    "id": "D01",
+    "date": "2026-10-18",
+    "city": "Oslo",
+    "title": "北京 -> 奥斯陆｜入境与机场酒店",
+    "sunrise": "08:02",
+    "sunset": "18:00",
+    "sunStatus": "calculated",
+    "routeUrl": null,
+    "items": [
+      {
+        "time": "03:55",
+        "name": "北京 PEK",
+        "title": "起飞 CA737",
+        "type": "transport",
+        "lat": 60.1939,
+        "lng": 11.1004,
+        "desc": "长途飞行",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=%E5%8C%97%E4%BA%AC%20PEK",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 0
+      },
+      {
+        "time": "16:50",
+        "name": "华沙 WAW",
+        "title": "转机 LO483",
+        "type": "plan",
+        "lat": 60.1939,
+        "lng": 11.1004,
+        "desc": "留意登机口",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=%E5%8D%8E%E6%B2%99%20WAW",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 1
+      },
+      {
+        "time": "18:55",
+        "name": "奥斯陆 OSL",
+        "title": "抵达入住机场酒店",
+        "type": "plan",
+        "lat": 60.1939,
+        "lng": 11.1004,
+        "desc": "只休息不进城",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=%E5%A5%A5%E6%96%AF%E9%99%86%20OSL",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 2
+      },
+      {
+        "time": "",
+        "name": "奥斯陆机场",
+        "title": "Oslo Airport",
+        "type": "spot",
+        "lat": 60.1939,
+        "lng": 11.1004,
+        "desc": "进出北挪最稳的枢纽，机场酒店能给第二天航班留足缓冲。 建议：不要为了市区打卡牺牲睡眠。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=60.193900%2C11.100400",
+        "hours": {
+          "status": "verified",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "机场开放；酒店入住以订单为准。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "住宿",
+        "name": "Radisson Hotel & Conference Centre Oslo Airport",
+        "title": "Hotel",
+        "type": "hotel",
+        "lat": 60.1939,
+        "lng": 11.1004,
+        "desc": "按订单确认入住/取消/晚到规则。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Radisson%20Hotel%20%26%20Conference%20Centre%20Oslo%20Airport",
+        "hours": {
+          "status": "booking",
+          "open": "按订单",
+          "close": "按订单",
+          "note": "酒店信息来自行程表；地址和入住规则以订单为准。"
+        },
+        "sort": 99
+      }
+    ]
+  },
+  {
+    "id": "D02",
+    "date": "2026-10-19",
+    "city": "Tromso",
+    "title": "奥斯陆 -> 特罗姆瑟｜抵达北极圈",
+    "sunrise": "08:10",
+    "sunset": "16:46",
+    "sunStatus": "calculated",
+    "routeUrl": "https://www.google.com/maps/dir/?api=1&origin=60.193900,11.100400&destination=69.649200,18.955300&waypoints=69.681400%2C18.917900&travelmode=driving",
+    "items": [
+      {
+        "time": "07:30",
+        "name": "OSL 机场酒店",
+        "title": "步行/接驳到航站楼",
+        "type": "transport",
+        "lat": 60.1939,
+        "lng": 11.1004,
+        "desc": "托运行李",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=OSL%20%E6%9C%BA%E5%9C%BA%E9%85%92%E5%BA%97",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 0
+      },
+      {
+        "time": "10:00-11:50",
+        "name": "OSL -> TOS",
+        "title": "SK4414 直飞",
+        "type": "transport",
+        "lat": 60.1939,
+        "lng": 11.1004,
+        "desc": "备选仅同日直飞",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=OSL%20-%3E%20TOS",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 1
+      },
+      {
+        "time": "13:00",
+        "name": "Scandic Ishavshotel",
+        "title": "入住/寄存",
+        "type": "plan",
+        "lat": 60.1939,
+        "lng": 11.1004,
+        "desc": "轻量活动",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Scandic%20Ishavshotel",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 2
+      },
+      {
+        "time": "14:30",
+        "name": "Tromsøbadet 或市区",
+        "title": "二选一",
+        "type": "plan",
+        "lat": 69.6492,
+        "lng": 18.9553,
+        "desc": "2小时",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Troms%C3%B8badet%20%E6%88%96%E5%B8%82%E5%8C%BA",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 3
+      },
+      {
+        "time": "",
+        "name": "特罗姆瑟",
+        "title": "Tromsø",
+        "type": "spot",
+        "lat": 69.6492,
+        "lng": 18.9553,
+        "desc": "北挪极光、观鲸和峡湾活动中心，城市不大但体验密度很高。 建议：海上活动优先，市区景点按体力补。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=69.649200%2C18.955300",
+        "hours": {
+          "status": "open-area",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "市区开放区域；餐饮商店需单独查当天时间。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "住宿",
+        "name": "Scandic Ishavshotel",
+        "title": "Hotel",
+        "type": "hotel",
+        "lat": 69.6492,
+        "lng": 18.9553,
+        "desc": "按订单确认入住/取消/晚到规则。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Scandic%20Ishavshotel",
+        "hours": {
+          "status": "booking",
+          "open": "按订单",
+          "close": "按订单",
+          "note": "酒店信息来自行程表；地址和入住规则以订单为准。"
+        },
+        "sort": 99
+      }
+    ]
+  },
+  {
+    "id": "D03",
+    "date": "2026-10-20",
+    "city": "Tromso",
+    "title": "特罗姆瑟｜海钓、北极大教堂、缆车",
+    "sunrise": "08:14",
+    "sunset": "16:41",
+    "sunStatus": "calculated",
+    "routeUrl": "https://www.google.com/maps/dir/?api=1&origin=69.649200,18.955300&destination=69.643600,18.996700&waypoints=69.648900%2C18.987600&travelmode=driving",
+    "items": [
+      {
+        "time": "08:20",
+        "name": "酒店",
+        "title": "出发去 Front Pier",
+        "type": "plan",
+        "lat": 69.6492,
+        "lng": 18.9553,
+        "desc": "步行/车10分钟",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=%E9%85%92%E5%BA%97",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 0
+      },
+      {
+        "time": "09:00-14:00",
+        "name": "极地钓鱼",
+        "title": "已付款核心体验",
+        "type": "plan",
+        "lat": 69.6492,
+        "lng": 18.9553,
+        "desc": "海上4-5小时",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=%E6%9E%81%E5%9C%B0%E9%92%93%E9%B1%BC",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 1
+      },
+      {
+        "time": "16:00",
+        "name": "北极大教堂",
+        "title": "短停拍照",
+        "type": "plan",
+        "lat": 69.6489,
+        "lng": 18.9876,
+        "desc": "40分钟",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=%E5%8C%97%E6%9E%81%E5%A4%A7%E6%95%99%E5%A0%82",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 2
+      },
+      {
+        "time": "17:00",
+        "name": "菲尔海森缆车",
+        "title": "天气好再上",
+        "type": "plan",
+        "lat": 69.6436,
+        "lng": 18.9967,
+        "desc": "1.5小时",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=%E8%8F%B2%E5%B0%94%E6%B5%B7%E6%A3%AE%E7%BC%86%E8%BD%A6",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 3
+      },
+      {
+        "time": "",
+        "name": "北极大教堂",
+        "title": "Arctic Cathedral",
+        "type": "spot",
+        "lat": 69.6489,
+        "lng": 18.9876,
+        "desc": "特罗姆瑟最有辨识度的建筑，适合短停拍照。 建议：阴雨天也能看，但不值得占用大段时间。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=69.648900%2C18.987600",
+        "hours": {
+          "status": "seasonal",
+          "open": "需复核",
+          "close": "需复核",
+          "note": "官网开放时间按日期和活动变化；计划 16:00 到访前需复核。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "",
+        "name": "菲尔海森缆车",
+        "title": "Fjellheisen",
+        "type": "spot",
+        "lat": 69.6436,
+        "lng": 18.9967,
+        "desc": "天气好时是俯瞰特罗姆瑟岛和峡湾的最佳点。 建议：云雾大就放弃，不要硬上。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=69.643600%2C18.996700",
+        "hours": {
+          "status": "seasonal",
+          "open": "需复核",
+          "close": "需复核",
+          "note": "缆车受天气和季节影响；云雾大直接放弃。"
+        },
+        "sort": 50
+      }
+    ]
+  },
+  {
+    "id": "D04",
+    "date": "2026-10-21",
+    "city": "Tromso",
+    "title": "特罗姆瑟｜观鲸日",
+    "sunrise": "08:18",
+    "sunset": "16:36",
+    "sunStatus": "calculated",
+    "routeUrl": null,
+    "items": [
+      {
+        "time": "05:00",
+        "name": "酒店",
+        "title": "出发去集合点",
+        "type": "plan",
+        "lat": 69.6492,
+        "lng": 18.9553,
+        "desc": "步行10分钟",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=%E9%85%92%E5%BA%97",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 0
+      },
+      {
+        "time": "05:30-13:30",
+        "name": "观鲸",
+        "title": "已付款核心体验",
+        "type": "plan",
+        "lat": 69.6492,
+        "lng": 18.9553,
+        "desc": "6-8小时",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=%E8%A7%82%E9%B2%B8",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 1
+      },
+      {
+        "time": "14:30",
+        "name": "酒店/午餐",
+        "title": "恢复体力",
+        "type": "plan",
+        "lat": 69.6492,
+        "lng": 18.9553,
+        "desc": "不加远程活动",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=%E9%85%92%E5%BA%97/%E5%8D%88%E9%A4%90",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 2
+      },
+      {
+        "time": "17:00",
+        "name": "整理行李",
+        "title": "准备 TOS-LKN",
+        "type": "plan",
+        "lat": 69.6492,
+        "lng": 18.9553,
+        "desc": "早点休息",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=%E6%95%B4%E7%90%86%E8%A1%8C%E6%9D%8E",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 3
+      },
+      {
+        "time": "",
+        "name": "特罗姆瑟",
+        "title": "Tromsø",
+        "type": "spot",
+        "lat": 69.6492,
+        "lng": 18.9553,
+        "desc": "北挪极光、观鲸和峡湾活动中心，城市不大但体验密度很高。 建议：海上活动优先，市区景点按体力补。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=69.649200%2C18.955300",
+        "hours": {
+          "status": "open-area",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "市区开放区域；餐饮商店需单独查当天时间。"
+        },
+        "sort": 50
+      }
+    ]
+  },
+  {
+    "id": "D05",
+    "date": "2026-10-22",
+    "city": "Leknes",
+    "title": "特罗姆瑟 -> 莱克内斯｜进入罗弗敦",
+    "sunrise": "08:35",
+    "sunset": "17:03",
+    "sunStatus": "calculated",
+    "routeUrl": "https://www.google.com/maps/dir/?api=1&origin=69.649200,18.955300&destination=68.073900,13.545000&waypoints=69.681400%2C18.917900%7C68.152500%2C13.609400&travelmode=driving",
+    "items": [
+      {
+        "time": "10:00",
+        "name": "特罗姆瑟",
+        "title": "轻量补给",
+        "type": "plan",
+        "lat": 69.6492,
+        "lng": 18.9553,
+        "desc": "麦当劳可删",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=%E7%89%B9%E7%BD%97%E5%A7%86%E7%91%9F",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 0
+      },
+      {
+        "time": "12:00",
+        "name": "TOS 机场",
+        "title": "托运行李",
+        "type": "transport",
+        "lat": 69.6814,
+        "lng": 18.9179,
+        "desc": "预留天气缓冲",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=TOS%20%E6%9C%BA%E5%9C%BA",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 1
+      },
+      {
+        "time": "14:20-15:20",
+        "name": "TOS -> LKN",
+        "title": "WF817 直飞",
+        "type": "transport",
+        "lat": 68.1525,
+        "lng": 13.6094,
+        "desc": "不转机",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=TOS%20-%3E%20LKN",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 2
+      },
+      {
+        "time": "16:30",
+        "name": "Ballstad",
+        "title": "取车后入住",
+        "type": "plan",
+        "lat": 68.0739,
+        "lng": 13.545,
+        "desc": "12km/20分钟",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Ballstad",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 3
+      },
+      {
+        "time": "",
+        "name": "莱克内斯机场",
+        "title": "Leknes Airport",
+        "type": "spot",
+        "lat": 68.1525,
+        "lng": 13.6094,
+        "desc": "罗弗敦中部机场，适合直接切入群岛自驾。 建议：航班少，TOS-LKN 直飞是行程链条核心。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=68.152500%2C13.609400",
+        "hours": {
+          "status": "verified",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "小机场，柜台时间以当天航班为准。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "",
+        "name": "巴尔斯塔",
+        "title": "Ballstad",
+        "type": "spot",
+        "lat": 68.0739,
+        "lng": 13.545,
+        "desc": "渔村住宿点，适合作为 LKN 落地后的轻松第一晚。 建议：落地后别再开太远。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=68.073900%2C13.545000",
+        "hours": {
+          "status": "unverified",
+          "open": "需复核",
+          "close": "需复核",
+          "note": "出发前按官网或 Google Maps 复核。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "住宿",
+        "name": "Solsiden Brygge Rorbuer",
+        "title": "Hotel",
+        "type": "hotel",
+        "lat": 68.0739,
+        "lng": 13.545,
+        "desc": "按订单确认入住/取消/晚到规则。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Solsiden%20Brygge%20Rorbuer",
+        "hours": {
+          "status": "booking",
+          "open": "按订单",
+          "close": "按订单",
+          "note": "酒店信息来自行程表；地址和入住规则以订单为准。"
+        },
+        "sort": 99
+      }
+    ]
+  },
+  {
+    "id": "D06",
+    "date": "2026-10-23",
+    "city": "Leknes",
+    "title": "罗弗敦｜Ballstad -> Reine/Å",
+    "sunrise": "08:38",
+    "sunset": "16:58",
+    "sunStatus": "calculated",
+    "routeUrl": "https://www.google.com/maps/dir/?api=1&origin=68.073900,13.545000&destination=67.880800,12.981400&waypoints=68.245000%2C13.761400%7C68.089900%2C13.231800%7C67.932700%2C13.089600&travelmode=driving",
+    "items": [
+      {
+        "time": "09:30",
+        "name": "Ballstad",
+        "title": "出发",
+        "type": "plan",
+        "lat": 67.8808,
+        "lng": 12.9814,
+        "desc": "不赶黑路",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Ballstad",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 0
+      },
+      {
+        "time": "10:10",
+        "name": "Lofotr Viking Museum",
+        "title": "天气差时更稳",
+        "type": "plan",
+        "lat": 68.245,
+        "lng": 13.7614,
+        "desc": "1-1.5小时",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Lofotr%20Viking%20Museum",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 1
+      },
+      {
+        "time": "12:30",
+        "name": "Ramberg Beach",
+        "title": "短停/午餐",
+        "type": "plan",
+        "lat": 68.0899,
+        "lng": 13.2318,
+        "desc": "45分钟",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Ramberg%20Beach",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 2
+      },
+      {
+        "time": "14:15",
+        "name": "Reine/Hamnøy",
+        "title": "核心海景区",
+        "type": "plan",
+        "lat": 67.9327,
+        "lng": 13.0896,
+        "desc": "1.5小时",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Reine/Hamn%C3%B8y",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 3
+      },
+      {
+        "time": "16:30",
+        "name": "Å Rorbuer",
+        "title": "入住",
+        "type": "plan",
+        "lat": 67.8808,
+        "lng": 12.9814,
+        "desc": "天黑前",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=%C3%85%20Rorbuer",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 4
+      },
+      {
+        "time": "",
+        "name": "罗弗敦维京博物馆",
+        "title": "Lofotr Viking Museum",
+        "type": "spot",
+        "lat": 68.245,
+        "lng": 13.7614,
+        "desc": "室内外结合，天气差时比海滩更稳。 建议：若 D6 时间紧，它可以让位给南部核心风景。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=68.245000%2C13.761400",
+        "hours": {
+          "status": "verified",
+          "open": "11:00",
+          "close": "17:00",
+          "note": "2026-09-16 至 2026-10-31：周二至周六 11:00-17:00，周日/周一关闭。D06 是周五，可用。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "",
+        "name": "兰贝格海滩",
+        "title": "Ramberg Beach",
+        "type": "spot",
+        "lat": 68.0899,
+        "lng": 13.2318,
+        "desc": "白沙滩和山体背景很有罗弗敦感，适合短停。 建议：风大时只拍照，不久留。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=68.089900%2C13.231800",
+        "hours": {
+          "status": "open-area",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "开放海滩；按风、雨和光线决定停留。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "",
+        "name": "雷讷",
+        "title": "Reine",
+        "type": "spot",
+        "lat": 67.9327,
+        "lng": 13.0896,
+        "desc": "罗弗敦最经典渔村之一，山海和红屋组合非常完整。 建议：核心点，建议留足慢看时间。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=67.932700%2C13.089600",
+        "hours": {
+          "status": "open-area",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "开放渔村；餐厅和停车以现场为准。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "",
+        "name": "哈姆诺伊",
+        "title": "Hamnøy",
+        "type": "spot",
+        "lat": 67.9442,
+        "lng": 13.1298,
+        "desc": "桥上视角是罗弗敦代表性照片机位。 建议：停车要安全，不要在桥上停留影响交通。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=67.944200%2C13.129800",
+        "hours": {
+          "status": "open-area",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "开放拍照点；不要在桥上停车。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "",
+        "name": "奥镇",
+        "title": "Å",
+        "type": "spot",
+        "lat": 67.8808,
+        "lng": 12.9814,
+        "desc": "E10 公路尽头的渔村，很适合作为南部收束点。 建议：轻松散步即可，不需要把点塞满。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=67.880800%2C12.981400",
+        "hours": {
+          "status": "open-area",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "开放村落；博物馆/店铺另查。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "住宿",
+        "name": "Å Rorbuer - by Classic Norway Hotels",
+        "title": "Hotel",
+        "type": "hotel",
+        "lat": 67.8808,
+        "lng": 12.9814,
+        "desc": "按订单确认入住/取消/晚到规则。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=%C3%85%20Rorbuer%20-%20by%20Classic%20Norway%20Hotels",
+        "hours": {
+          "status": "booking",
+          "open": "按订单",
+          "close": "按订单",
+          "note": "酒店信息来自行程表；地址和入住规则以订单为准。"
+        },
+        "sort": 99
+      }
+    ]
+  },
+  {
+    "id": "D07",
+    "date": "2026-10-24",
+    "city": "Leknes",
+    "title": "罗弗敦南部｜Å、Reine、Hamnøy",
+    "sunrise": "08:42",
+    "sunset": "16:54",
+    "sunStatus": "calculated",
+    "routeUrl": "https://www.google.com/maps/dir/?api=1&origin=67.880800,12.981400&destination=67.880800,12.981400&waypoints=67.932700%2C13.089600%7C67.944200%2C13.129800&travelmode=driving",
+    "items": [
+      {
+        "time": "09:30",
+        "name": "Å 镇",
+        "title": "村落慢逛",
+        "type": "plan",
+        "lat": 67.8808,
+        "lng": 12.9814,
+        "desc": "1.5小时",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=%C3%85%20%E9%95%87",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 0
+      },
+      {
+        "time": "11:30",
+        "name": "Reine",
+        "title": "午餐/港口/观景",
+        "type": "plan",
+        "lat": 67.9327,
+        "lng": 13.0896,
+        "desc": "2小时",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Reine",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 1
+      },
+      {
+        "time": "14:00",
+        "name": "Hamnøy Bridge",
+        "title": "拍照点",
+        "type": "plan",
+        "lat": 67.8808,
+        "lng": 12.9814,
+        "desc": "45分钟",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Hamn%C3%B8y%20Bridge",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 2
+      },
+      {
+        "time": "15:30",
+        "name": "Anita's Seafood",
+        "title": "早晚餐/休息",
+        "type": "plan",
+        "lat": 67.8808,
+        "lng": 12.9814,
+        "desc": "1小时",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Anita%27s%20Seafood",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 3
+      },
+      {
+        "time": "",
+        "name": "奥镇",
+        "title": "Å",
+        "type": "spot",
+        "lat": 67.8808,
+        "lng": 12.9814,
+        "desc": "E10 公路尽头的渔村，很适合作为南部收束点。 建议：轻松散步即可，不需要把点塞满。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=67.880800%2C12.981400",
+        "hours": {
+          "status": "open-area",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "开放村落；博物馆/店铺另查。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "",
+        "name": "雷讷",
+        "title": "Reine",
+        "type": "spot",
+        "lat": 67.9327,
+        "lng": 13.0896,
+        "desc": "罗弗敦最经典渔村之一，山海和红屋组合非常完整。 建议：核心点，建议留足慢看时间。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=67.932700%2C13.089600",
+        "hours": {
+          "status": "open-area",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "开放渔村；餐厅和停车以现场为准。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "",
+        "name": "哈姆诺伊",
+        "title": "Hamnøy",
+        "type": "spot",
+        "lat": 67.9442,
+        "lng": 13.1298,
+        "desc": "桥上视角是罗弗敦代表性照片机位。 建议：停车要安全，不要在桥上停留影响交通。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=67.944200%2C13.129800",
+        "hours": {
+          "status": "open-area",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "开放拍照点；不要在桥上停车。"
+        },
+        "sort": 50
+      }
+    ]
+  },
+  {
+    "id": "D08",
+    "date": "2026-10-25",
+    "city": "Svolvaer",
+    "title": "罗弗敦关键转场｜Reine/Å -> Svolvær",
+    "sunrise": "07:43",
+    "sunset": "15:46",
+    "sunStatus": "calculated",
+    "routeUrl": "https://www.google.com/maps/dir/?api=1&origin=67.880800,12.981400&destination=68.234200,14.568300&waypoints=68.198400%2C13.531000%7C68.209500%2C13.514700&travelmode=driving",
+    "items": [
+      {
+        "time": "08:30",
+        "name": "Å/Reine",
+        "title": "出发北上",
+        "type": "plan",
+        "lat": 67.8808,
+        "lng": 12.9814,
+        "desc": "当天不恋战",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=%C3%85/Reine",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 0
+      },
+      {
+        "time": "10:45",
+        "name": "Haukland 或 Uttakleiv",
+        "title": "只选一个",
+        "type": "plan",
+        "lat": 68.1984,
+        "lng": 13.531,
+        "desc": "45-60分钟",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Haukland%20%E6%88%96%20Uttakleiv",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 1
+      },
+      {
+        "time": "12:30",
+        "name": "Leknes",
+        "title": "午餐/加油",
+        "type": "plan",
+        "lat": 67.8808,
+        "lng": 12.9814,
+        "desc": "45分钟",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Leknes",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 2
+      },
+      {
+        "time": "14:30",
+        "name": "Svolvær",
+        "title": "入住",
+        "type": "plan",
+        "lat": 68.2342,
+        "lng": 14.5683,
+        "desc": "城市轻逛可选",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Svolv%C3%A6r",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 3
+      },
+      {
+        "time": "",
+        "name": "豪克兰海滩",
+        "title": "Haukland Beach",
+        "type": "spot",
+        "lat": 68.1984,
+        "lng": 13.531,
+        "desc": "罗弗敦北上途中最适合二选一短停的海滩。 建议：D8 只选它或 Uttakleiv 之一。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=68.198400%2C13.531000",
+        "hours": {
+          "status": "open-area",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "开放海滩；D08 与 Uttakleiv 二选一。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "",
+        "name": "乌塔克莱夫海滩",
+        "title": "Uttakleiv Beach",
+        "type": "spot",
+        "lat": 68.2095,
+        "lng": 13.5147,
+        "desc": "海岸线更野，天气好时很出片。 建议：与 Haukland 二选一，不能两个都恋战。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=68.209500%2C13.514700",
+        "hours": {
+          "status": "open-area",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "开放海滩；D08 与 Haukland 二选一。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "",
+        "name": "斯沃尔韦尔",
+        "title": "Svolvær",
+        "type": "spot",
+        "lat": 68.2342,
+        "lng": 14.5683,
+        "desc": "罗弗敦东部城镇，适合做 EVE 机场前夜。 建议：D8 必须天黑前到这里。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=68.234200%2C14.568300",
+        "hours": {
+          "status": "open-area",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "城镇开放区域；天黑前抵达优先。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "住宿",
+        "name": "Thon Hotel Lofoten",
+        "title": "Hotel",
+        "type": "hotel",
+        "lat": 68.2342,
+        "lng": 14.5683,
+        "desc": "按订单确认入住/取消/晚到规则。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Thon%20Hotel%20Lofoten",
+        "hours": {
+          "status": "booking",
+          "open": "按订单",
+          "close": "按订单",
+          "note": "酒店信息来自行程表；地址和入住规则以订单为准。"
+        },
+        "sort": 99
+      }
+    ]
+  },
+  {
+    "id": "D09",
+    "date": "2026-10-26",
+    "city": "Evenes",
+    "title": "Svolvær -> EVE -> 奥斯陆",
+    "sunrise": "07:41",
+    "sunset": "15:31",
+    "sunStatus": "calculated",
+    "routeUrl": "https://www.google.com/maps/dir/?api=1&origin=68.234200,14.568300&destination=60.193900,11.100400&waypoints=68.491300%2C16.678100&travelmode=driving",
+    "items": [
+      {
+        "time": "09:00",
+        "name": "Svolvær",
+        "title": "出发去 EVE",
+        "type": "plan",
+        "lat": 68.2342,
+        "lng": 14.5683,
+        "desc": "按3.5-4小时预算",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Svolv%C3%A6r",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 0
+      },
+      {
+        "time": "12:45",
+        "name": "EVE 机场",
+        "title": "还车/托运",
+        "type": "transport",
+        "lat": 68.4913,
+        "lng": 16.6781,
+        "desc": "至少1.5小时",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=EVE%20%E6%9C%BA%E5%9C%BA",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 1
+      },
+      {
+        "time": "15:00-16:45",
+        "name": "EVE -> OSL",
+        "title": "DY365 直飞",
+        "type": "transport",
+        "lat": 68.4913,
+        "lng": 16.6781,
+        "desc": "不建议11点早班",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=EVE%20-%3E%20OSL",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 2
+      },
+      {
+        "time": "18:30",
+        "name": "奥斯陆市区",
+        "title": "入住",
+        "type": "plan",
+        "lat": 68.2342,
+        "lng": 14.5683,
+        "desc": "轻量晚餐",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=%E5%A5%A5%E6%96%AF%E9%99%86%E5%B8%82%E5%8C%BA",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 3
+      },
+      {
+        "time": "",
+        "name": "斯沃尔韦尔",
+        "title": "Svolvær",
+        "type": "spot",
+        "lat": 68.2342,
+        "lng": 14.5683,
+        "desc": "罗弗敦东部城镇，适合做 EVE 机场前夜。 建议：D8 必须天黑前到这里。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=68.234200%2C14.568300",
+        "hours": {
+          "status": "open-area",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "城镇开放区域；天黑前抵达优先。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "",
+        "name": "埃文内斯机场",
+        "title": "Harstad/Narvik Airport",
+        "type": "spot",
+        "lat": 68.4913,
+        "lng": 16.6781,
+        "desc": "离罗弗敦较近的出岛机场。 建议：还车、托运都要留足时间。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=68.491300%2C16.678100",
+        "hours": {
+          "status": "verified",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "机场开放；还车柜台以租车公司为准。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "住宿",
+        "name": "Comfort Hotel Xpress Central Station",
+        "title": "Hotel",
+        "type": "hotel",
+        "lat": 60.1939,
+        "lng": 11.1004,
+        "desc": "按订单确认入住/取消/晚到规则。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Comfort%20Hotel%20Xpress%20Central%20Station",
+        "hours": {
+          "status": "booking",
+          "open": "按订单",
+          "close": "按订单",
+          "note": "酒店信息来自行程表；地址和入住规则以订单为准。"
+        },
+        "sort": 99
+      }
+    ]
+  },
+  {
+    "id": "D10",
+    "date": "2026-10-27",
+    "city": "Reykjavik",
+    "title": "奥斯陆 -> 雷克雅未克｜蓝湖与雷市入住",
+    "sunrise": "08:53",
+    "sunset": "17:27",
+    "sunStatus": "calculated",
+    "routeUrl": "https://www.google.com/maps/dir/?api=1&origin=60.193900,11.100400&destination=64.146600,-21.942600&waypoints=63.985000%2C-22.605600%7C63.880400%2C-22.449500&travelmode=driving",
+    "items": [
+      {
+        "time": "06:45",
+        "name": "奥斯陆酒店",
+        "title": "去 OSL",
+        "type": "plan",
+        "lat": 60.1939,
+        "lng": 11.1004,
+        "desc": "火车30-40分钟",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=%E5%A5%A5%E6%96%AF%E9%99%86%E9%85%92%E5%BA%97",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 0
+      },
+      {
+        "time": "09:20-11:25",
+        "name": "OSL -> KEF",
+        "title": "SK4785 直飞",
+        "type": "transport",
+        "lat": 60.1939,
+        "lng": 11.1004,
+        "desc": "备选同日直飞",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=OSL%20-%3E%20KEF",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 1
+      },
+      {
+        "time": "13:00",
+        "name": "Blue Lagoon",
+        "title": "泡汤/午餐",
+        "type": "plan",
+        "lat": 63.8804,
+        "lng": -22.4495,
+        "desc": "2.5小时",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Blue%20Lagoon",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 2
+      },
+      {
+        "time": "16:00",
+        "name": "Reykjavik",
+        "title": "入住",
+        "type": "plan",
+        "lat": 64.1466,
+        "lng": -21.9426,
+        "desc": "不去南岸",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Reykjavik",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 3
+      },
+      {
+        "time": "",
+        "name": "蓝湖温泉",
+        "title": "Blue Lagoon",
+        "type": "spot",
+        "lat": 63.8804,
+        "lng": -22.4495,
+        "desc": "落地后最适合的低强度项目，能把飞行疲劳卸掉。 建议：晚到就改期或放弃，不为它夜驾。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=63.880400%2C-22.449500",
+        "hours": {
+          "status": "seasonal",
+          "open": "按预约",
+          "close": "按预约",
+          "note": "必须按蓝湖预约时段执行；落地晚点则改期或放弃。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "",
+        "name": "雷克雅未克",
+        "title": "Reykjavík",
+        "type": "spot",
+        "lat": 64.1466,
+        "lng": -21.9426,
+        "desc": "冰岛首都，也是南岸前后的缓冲垫。 建议：citywalk 可以被黄金圈和天气缓冲吃掉。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=64.146600%2C-21.942600",
+        "hours": {
+          "status": "open-area",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "城市开放区域；具体店铺另查。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "住宿",
+        "name": "Centrum Hotel Reykjavik",
+        "title": "Hotel",
+        "type": "hotel",
+        "lat": 64.1466,
+        "lng": -21.9426,
+        "desc": "按订单确认入住/取消/晚到规则。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Centrum%20Hotel%20Reykjavik",
+        "hours": {
+          "status": "booking",
+          "open": "按订单",
+          "close": "按订单",
+          "note": "酒店信息来自行程表；地址和入住规则以订单为准。"
+        },
+        "sort": 99
+      }
+    ]
+  },
+  {
+    "id": "D11",
+    "date": "2026-10-28",
+    "city": "Vik",
+    "title": "冰岛南岸｜雷市 -> 瀑布 -> 黑沙滩 -> 维克",
+    "sunrise": "08:41",
+    "sunset": "17:16",
+    "sunStatus": "calculated",
+    "routeUrl": "https://www.google.com/maps/dir/?api=1&origin=64.146600,-21.942600&destination=63.418600,-19.006000&waypoints=63.615600%2C-19.988600%7C63.532100%2C-19.511400%7C63.404300%2C-19.044800&travelmode=driving",
+    "items": [
+      {
+        "time": "08:30",
+        "name": "Reykjavik",
+        "title": "出发，带热饮/午餐",
+        "type": "plan",
+        "lat": 63.4186,
+        "lng": -19.006,
+        "desc": "约128km",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Reykjavik",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 0
+      },
+      {
+        "time": "10:20",
+        "name": "Seljalandsfoss",
+        "title": "瀑布短线",
+        "type": "plan",
+        "lat": 63.6156,
+        "lng": -19.9886,
+        "desc": "45分钟",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Seljalandsfoss",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 1
+      },
+      {
+        "time": "11:45",
+        "name": "Skógafoss",
+        "title": "瀑布/午餐",
+        "type": "plan",
+        "lat": 63.5321,
+        "lng": -19.5114,
+        "desc": "1小时15分",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Sk%C3%B3gafoss",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 2
+      },
+      {
+        "time": "13:40",
+        "name": "Reynisfjara",
+        "title": "黑沙滩",
+        "type": "plan",
+        "lat": 63.4043,
+        "lng": -19.0448,
+        "desc": "45分钟",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Reynisfjara",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 3
+      },
+      {
+        "time": "15:15",
+        "name": "Vik",
+        "title": "入住休息",
+        "type": "plan",
+        "lat": 63.4186,
+        "lng": -19.006,
+        "desc": "飞机残骸已删除",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Vik",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 4
+      },
+      {
+        "time": "",
+        "name": "塞里雅兰瀑布",
+        "title": "Seljalandsfoss",
+        "type": "spot",
+        "lat": 63.6156,
+        "lng": -19.9886,
+        "desc": "南岸第一座代表性瀑布，可走到瀑布后方。 建议：穿防水外套，低温结冰时不要硬走后方。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=63.615600%2C-19.988600",
+        "hours": {
+          "status": "open-area",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "瀑布区域通常全天开放；设施和停车按季节变化。结冰时不要硬走瀑布后方。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "",
+        "name": "斯科加瀑布",
+        "title": "Skógafoss",
+        "type": "spot",
+        "lat": 63.5321,
+        "lng": -19.5114,
+        "desc": "水量大、气势强，是南岸最稳的核心点。 建议：楼梯观景耗体力，天气差可只看下方。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=63.532100%2C-19.511400",
+        "hours": {
+          "status": "open-area",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "瀑布开放区域；楼梯和步道按天气决定。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "",
+        "name": "黑沙滩",
+        "title": "Reynisfjara",
+        "type": "spot",
+        "lat": 63.4043,
+        "lng": -19.0448,
+        "desc": "玄武岩柱和黑沙海岸很震撼。 建议：绝不背对海浪，不靠近浪线。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=63.404300%2C-19.044800",
+        "hours": {
+          "status": "open-area",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "黑沙滩开放区域；最高风险是疯狗浪，绝不背对海。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "",
+        "name": "维克",
+        "title": "Vík",
+        "type": "spot",
+        "lat": 63.4186,
+        "lng": -19.006,
+        "desc": "南岸住宿和补给点，适合承接瀑布/黑沙滩日。 建议：按时到 Vik 比补景点更重要。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=63.418600%2C-19.006000",
+        "hours": {
+          "status": "open-area",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "城镇开放区域；住宿和餐饮另查。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "住宿",
+        "name": "Vík Apartments",
+        "title": "Hotel",
+        "type": "hotel",
+        "lat": 63.4186,
+        "lng": -19.006,
+        "desc": "按订单确认入住/取消/晚到规则。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=V%C3%ADk%20Apartments",
+        "hours": {
+          "status": "booking",
+          "open": "按订单",
+          "close": "按订单",
+          "note": "酒店信息来自行程表；地址和入住规则以订单为准。"
+        },
+        "sort": 99
+      }
+    ]
+  },
+  {
+    "id": "D12",
+    "date": "2026-10-29",
+    "city": "Jokulsarlon",
+    "title": "维克 -> 冰河湖｜冰川/冰河湖核心日",
+    "sunrise": "08:36",
+    "sunset": "16:58",
+    "sunStatus": "calculated",
+    "routeUrl": "https://www.google.com/maps/dir/?api=1&origin=63.418600,-19.006000&destination=64.043900,-16.177800&waypoints=64.017000%2C-16.966900%7C64.048500%2C-16.179500&travelmode=driving",
+    "items": [
+      {
+        "time": "08:30",
+        "name": "Vik",
+        "title": "出发",
+        "type": "plan",
+        "lat": 63.4186,
+        "lng": -19.006,
+        "desc": "天气差则提前",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Vik",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 0
+      },
+      {
+        "time": "10:45",
+        "name": "Skaftafell/集合点",
+        "title": "蓝冰洞或冰川徒步",
+        "type": "plan",
+        "lat": 64.017,
+        "lng": -16.9669,
+        "desc": "约3小时",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Skaftafell/%E9%9B%86%E5%90%88%E7%82%B9",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 1
+      },
+      {
+        "time": "15:00",
+        "name": "Jökulsárlón",
+        "title": "冰河湖",
+        "type": "plan",
+        "lat": 64.0485,
+        "lng": -16.1795,
+        "desc": "45分钟",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=J%C3%B6kuls%C3%A1rl%C3%B3n",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 2
+      },
+      {
+        "time": "16:00",
+        "name": "Diamond Beach",
+        "title": "短停",
+        "type": "plan",
+        "lat": 64.0439,
+        "lng": -16.1778,
+        "desc": "30分钟",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Diamond%20Beach",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 3
+      },
+      {
+        "time": "",
+        "name": "斯卡夫塔山",
+        "title": "Skaftafell",
+        "type": "spot",
+        "lat": 64.017,
+        "lng": -16.9669,
+        "desc": "冰川徒步/蓝冰洞常见集合区域。 建议：活动时间要以供应商集合点为准。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=64.017000%2C-16.966900",
+        "hours": {
+          "status": "reservation",
+          "open": "按供应商",
+          "close": "按供应商",
+          "note": "冰川徒步/蓝冰洞以预订供应商集合时间和天气取消规则为准。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "",
+        "name": "杰古沙龙冰河湖",
+        "title": "Jökulsárlón",
+        "type": "spot",
+        "lat": 64.0485,
+        "lng": -16.1795,
+        "desc": "冰山漂浮的冰河湖，是冰岛南岸最独特景观。 建议：风大低温时停留别过长。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=64.048500%2C-16.179500",
+        "hours": {
+          "status": "open-area",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "冰河湖户外区域；船/活动另查。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "",
+        "name": "钻石沙滩",
+        "title": "Diamond Beach",
+        "type": "spot",
+        "lat": 64.0439,
+        "lng": -16.1778,
+        "desc": "黑沙上的冰块像碎钻，和冰河湖距离很近。 建议：当天光不足时短停即可。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=64.043900%2C-16.177800",
+        "hours": {
+          "status": "open-area",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "开放海滩；光线不足时短停。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "住宿",
+        "name": "Hótel Jökulsárlón - Glacier Lagoon Hotel",
+        "title": "Hotel",
+        "type": "hotel",
+        "lat": 64.0439,
+        "lng": -16.1778,
+        "desc": "按订单确认入住/取消/晚到规则。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=H%C3%B3tel%20J%C3%B6kuls%C3%A1rl%C3%B3n%20-%20Glacier%20Lagoon%20Hotel",
+        "hours": {
+          "status": "booking",
+          "open": "按订单",
+          "close": "按订单",
+          "note": "酒店信息来自行程表；地址和入住规则以订单为准。"
+        },
+        "sort": 99
+      }
+    ]
+  },
+  {
+    "id": "D13",
+    "date": "2026-10-30",
+    "city": "Uthlid",
+    "title": "冰河湖 -> 黄金圈住宿｜转场日",
+    "sunrise": "08:57",
+    "sunset": "17:11",
+    "sunStatus": "calculated",
+    "routeUrl": "https://www.google.com/maps/dir/?api=1&origin=64.048500,-16.179500&destination=64.235500,-20.333600&waypoints=63.418600%2C-19.006000&travelmode=driving",
+    "items": [
+      {
+        "time": "08:30",
+        "name": "冰河湖酒店",
+        "title": "出发",
+        "type": "plan",
+        "lat": 64.0485,
+        "lng": -16.1795,
+        "desc": "长途转场",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=%E5%86%B0%E6%B2%B3%E6%B9%96%E9%85%92%E5%BA%97",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 0
+      },
+      {
+        "time": "11:30",
+        "name": "Vik/沿途休息",
+        "title": "午餐/加油/换司机",
+        "type": "plan",
+        "lat": 64.0485,
+        "lng": -16.1795,
+        "desc": "45分钟",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Vik/%E6%B2%BF%E9%80%94%E4%BC%91%E6%81%AF",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 1
+      },
+      {
+        "time": "16:00",
+        "name": "Úthlíd",
+        "title": "入住",
+        "type": "plan",
+        "lat": 64.0485,
+        "lng": -16.1795,
+        "desc": "不完整跑黄金圈",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=%C3%9Athl%C3%ADd",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 2
+      },
+      {
+        "time": "",
+        "name": "杰古沙龙冰河湖",
+        "title": "Jökulsárlón",
+        "type": "spot",
+        "lat": 64.0485,
+        "lng": -16.1795,
+        "desc": "冰山漂浮的冰河湖，是冰岛南岸最独特景观。 建议：风大低温时停留别过长。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=64.048500%2C-16.179500",
+        "hours": {
+          "status": "open-area",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "冰河湖户外区域；船/活动另查。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "",
+        "name": "黄金圈住宿",
+        "title": "Úthlíð",
+        "type": "spot",
+        "lat": 64.2355,
+        "lng": -20.3336,
+        "desc": "黄金圈附近住宿点，可把长途转场和黄金圈拆开。 建议：D13 天黑前抵达是第一目标。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=64.235500%2C-20.333600",
+        "hours": {
+          "status": "hotel",
+          "open": "按订单",
+          "close": "按订单",
+          "note": "住宿点；确认入住时间和晚到规则。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "住宿",
+        "name": "Úthlíð Cottages",
+        "title": "Hotel",
+        "type": "hotel",
+        "lat": 64.2355,
+        "lng": -20.3336,
+        "desc": "按订单确认入住/取消/晚到规则。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=%C3%9Athl%C3%AD%C3%B0%20Cottages",
+        "hours": {
+          "status": "booking",
+          "open": "按订单",
+          "close": "按订单",
+          "note": "酒店信息来自行程表；地址和入住规则以订单为准。"
+        },
+        "sort": 99
+      }
+    ]
+  },
+  {
+    "id": "D14",
+    "date": "2026-10-31",
+    "city": "Reykjavik",
+    "title": "黄金圈 -> 雷克雅未克｜拆分黄金圈",
+    "sunrise": "09:06",
+    "sunset": "17:14",
+    "sunStatus": "calculated",
+    "routeUrl": "https://www.google.com/maps/dir/?api=1&origin=64.235500,-20.333600&destination=64.146600,-21.942600&waypoints=64.327100%2C-20.119900%7C64.313700%2C-20.300000%7C64.255500%2C-21.129300&travelmode=driving",
+    "items": [
+      {
+        "time": "09:00",
+        "name": "Úthlíd",
+        "title": "出发",
+        "type": "plan",
+        "lat": 64.2355,
+        "lng": -20.3336,
+        "desc": "黄金圈日",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=%C3%9Athl%C3%ADd",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 0
+      },
+      {
+        "time": "09:30",
+        "name": "Gullfoss",
+        "title": "黄金瀑布",
+        "type": "plan",
+        "lat": 64.3271,
+        "lng": -20.1199,
+        "desc": "1小时",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Gullfoss",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 1
+      },
+      {
+        "time": "10:50",
+        "name": "Geysir",
+        "title": "间歇泉",
+        "type": "plan",
+        "lat": 64.3137,
+        "lng": -20.3,
+        "desc": "45分钟",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Geysir",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 2
+      },
+      {
+        "time": "14:00",
+        "name": "Thingvellir",
+        "title": "国家公园",
+        "type": "plan",
+        "lat": 64.2555,
+        "lng": -21.1293,
+        "desc": "1.5小时",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Thingvellir",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 3
+      },
+      {
+        "time": "16:30",
+        "name": "Reykjavik",
+        "title": "入住/轻量citywalk",
+        "type": "plan",
+        "lat": 64.1466,
+        "lng": -21.9426,
+        "desc": "雷市做缓冲",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Reykjavik",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 4
+      },
+      {
+        "time": "",
+        "name": "黄金瀑布",
+        "title": "Gullfoss",
+        "type": "spot",
+        "lat": 64.3271,
+        "lng": -20.1199,
+        "desc": "黄金圈最有冲击力的瀑布，优先级高。 建议：风大水雾重，注意防滑。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=64.327100%2C-20.119900",
+        "hours": {
+          "status": "listing",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "瀑布观景区通常全天开放；游客中心常见 09:30-19:00，季节变动需复核。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "",
+        "name": "盖歇尔间歇泉",
+        "title": "Geysir",
+        "type": "spot",
+        "lat": 64.3137,
+        "lng": -20.3,
+        "desc": "看 Strokkur 喷发，等待时间通常不长。 建议：可停留 40-50 分钟，不必过长。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=64.313700%2C-20.300000",
+        "hours": {
+          "status": "open-area",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "地热区户外区域；游客中心/餐饮另查。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "",
+        "name": "辛格维利尔国家公园",
+        "title": "Þingvellir",
+        "type": "spot",
+        "lat": 64.2555,
+        "lng": -21.1293,
+        "desc": "欧亚/北美板块裂谷和冰岛历史核心地。 建议：步道按天气选择，别拖到天黑。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=64.255500%2C-21.129300",
+        "hours": {
+          "status": "verified",
+          "open": "09:00",
+          "close": "18:00",
+          "note": "游客中心 4-10 月 09:00-18:00；户外步道按天气和日照执行。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "",
+        "name": "雷克雅未克",
+        "title": "Reykjavík",
+        "type": "spot",
+        "lat": 64.1466,
+        "lng": -21.9426,
+        "desc": "冰岛首都，也是南岸前后的缓冲垫。 建议：citywalk 可以被黄金圈和天气缓冲吃掉。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=64.146600%2C-21.942600",
+        "hours": {
+          "status": "open-area",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "城市开放区域；具体店铺另查。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "住宿",
+        "name": "Centrum Hotel Reykjavik",
+        "title": "Hotel",
+        "type": "hotel",
+        "lat": 64.1466,
+        "lng": -21.9426,
+        "desc": "按订单确认入住/取消/晚到规则。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Centrum%20Hotel%20Reykjavik",
+        "hours": {
+          "status": "booking",
+          "open": "按订单",
+          "close": "按订单",
+          "note": "酒店信息来自行程表；地址和入住规则以订单为准。"
+        },
+        "sort": 99
+      }
+    ]
+  },
+  {
+    "id": "D15",
+    "date": "2026-11-01",
+    "city": "Reykjavik",
+    "title": "雷克雅未克｜缓冲与轻量 citywalk",
+    "sunrise": "09:09",
+    "sunset": "17:11",
+    "sunStatus": "calculated",
+    "routeUrl": "https://www.google.com/maps/dir/?api=1&origin=64.141700,-21.926600&destination=64.146600,-21.942600&waypoints=64.150300%2C-21.932700&travelmode=driving",
+    "items": [
+      {
+        "time": "09:30",
+        "name": "Hallgrímskirkja",
+        "title": "教堂/登塔可选",
+        "type": "plan",
+        "lat": 64.1417,
+        "lng": -21.9266,
+        "desc": "1小时",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Hallgr%C3%ADmskirkja",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 0
+      },
+      {
+        "time": "11:00",
+        "name": "Laugavegur",
+        "title": "主街咖啡购物",
+        "type": "plan",
+        "lat": 64.1417,
+        "lng": -21.9266,
+        "desc": "1.5小时",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Laugavegur",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 1
+      },
+      {
+        "time": "13:00",
+        "name": "Harpa/Old Harbour",
+        "title": "午餐+海边散步",
+        "type": "plan",
+        "lat": 64.1503,
+        "lng": -21.9327,
+        "desc": "2小时",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Harpa/Old%20Harbour",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 2
+      },
+      {
+        "time": "16:00",
+        "name": "酒店",
+        "title": "整理行李/确认还车",
+        "type": "plan",
+        "lat": 64.1417,
+        "lng": -21.9266,
+        "desc": "缓冲",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=%E9%85%92%E5%BA%97",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 3
+      },
+      {
+        "time": "",
+        "name": "哈尔格林姆教堂",
+        "title": "Hallgrímskirkja",
+        "type": "spot",
+        "lat": 64.1417,
+        "lng": -21.9266,
+        "desc": "雷市地标，登塔可看城市彩色屋顶。 建议：时间紧看外观即可。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=64.141700%2C-21.926600",
+        "hours": {
+          "status": "seasonal",
+          "open": "需复核",
+          "close": "需复核",
+          "note": "教堂和登塔时间会随季节/活动变化。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "",
+        "name": "哈帕音乐厅",
+        "title": "Harpa",
+        "type": "spot",
+        "lat": 64.1503,
+        "lng": -21.9327,
+        "desc": "玻璃外立面和海港景观适合轻松散步。 建议：适合作为缓冲日项目。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=64.150300%2C-21.932700",
+        "hours": {
+          "status": "seasonal",
+          "open": "需复核",
+          "close": "需复核",
+          "note": "公共空间/演出时间不同，按当天官网复核。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "",
+        "name": "雷克雅未克",
+        "title": "Reykjavík",
+        "type": "spot",
+        "lat": 64.1466,
+        "lng": -21.9426,
+        "desc": "冰岛首都，也是南岸前后的缓冲垫。 建议：citywalk 可以被黄金圈和天气缓冲吃掉。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=64.146600%2C-21.942600",
+        "hours": {
+          "status": "open-area",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "城市开放区域；具体店铺另查。"
+        },
+        "sort": 50
+      }
+    ]
+  },
+  {
+    "id": "D16",
+    "date": "2026-11-02",
+    "city": "Copenhagen",
+    "title": "雷克雅未克 -> 哥本哈根｜还车与抵达",
+    "sunrise": "07:16",
+    "sunset": "16:28",
+    "sunStatus": "calculated",
+    "routeUrl": "https://www.google.com/maps/dir/?api=1&origin=64.146600,-21.942600&destination=55.676100,12.568300&waypoints=63.985000%2C-22.605600%7C55.618100%2C12.656100&travelmode=driving",
+    "items": [
+      {
+        "time": "10:30",
+        "name": "Reykjavik",
+        "title": "出发去 KEF",
+        "type": "plan",
+        "lat": 64.1466,
+        "lng": -21.9426,
+        "desc": "50km/50分钟",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Reykjavik",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 0
+      },
+      {
+        "time": "11:45",
+        "name": "KEF",
+        "title": "还车/拍照留档",
+        "type": "plan",
+        "lat": 63.985,
+        "lng": -22.6056,
+        "desc": "45分钟",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=KEF",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 1
+      },
+      {
+        "time": "15:30-19:45",
+        "name": "KEF -> CPH",
+        "title": "FI212 直飞",
+        "type": "transport",
+        "lat": 63.985,
+        "lng": -22.6056,
+        "desc": "备选同日直飞",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=KEF%20-%3E%20CPH",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 2
+      },
+      {
+        "time": "20:30",
+        "name": "酒店",
+        "title": "入住/轻量晚餐",
+        "type": "plan",
+        "lat": 64.1466,
+        "lng": -21.9426,
+        "desc": "Scandic Copenhagen",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=%E9%85%92%E5%BA%97",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 3
+      },
+      {
+        "time": "",
+        "name": "凯夫拉维克机场",
+        "title": "Keflavik Airport",
+        "type": "spot",
+        "lat": 63.985,
+        "lng": -22.6056,
+        "desc": "冰岛国际机场，租车取还点集中。 建议：还车日建议至少提前 3 小时到机场区域。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=63.985000%2C-22.605600",
+        "hours": {
+          "status": "verified",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "机场开放；还车和托运以当天柜台为准。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "",
+        "name": "哥本哈根",
+        "title": "Copenhagen",
+        "type": "spot",
+        "lat": 55.6761,
+        "lng": 12.5683,
+        "desc": "紧凑、适合步行的一日城市。 建议：把小美人鱼设为可选，不要为它误机。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=55.676100%2C12.568300",
+        "hours": {
+          "status": "open-area",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "城市开放区域；商店餐厅另查。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "住宿",
+        "name": "Scandic Copenhagen",
+        "title": "Hotel",
+        "type": "hotel",
+        "lat": 55.6761,
+        "lng": 12.5683,
+        "desc": "按订单确认入住/取消/晚到规则。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Scandic%20Copenhagen",
+        "hours": {
+          "status": "booking",
+          "open": "按订单",
+          "close": "按订单",
+          "note": "酒店信息来自行程表；地址和入住规则以订单为准。"
+        },
+        "sort": 99
+      }
+    ]
+  },
+  {
+    "id": "D17",
+    "date": "2026-11-03",
+    "city": "Copenhagen",
+    "title": "哥本哈根一日游 -> 北京",
+    "sunrise": "07:18",
+    "sunset": "16:26",
+    "sunStatus": "calculated",
+    "routeUrl": "https://www.google.com/maps/dir/?api=1&origin=55.676100,12.568300&destination=55.618100,12.656100&waypoints=55.678100%2C12.573200%7C55.679800%2C12.591000%7C55.684000%2C12.593000%7C55.692900%2C12.599300&travelmode=driving",
+    "items": [
+      {
+        "time": "09:00",
+        "name": "酒店 -> Strøget",
+        "title": "市中心步行街",
+        "type": "transport",
+        "lat": 55.6781,
+        "lng": 12.5732,
+        "desc": "45分钟",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=%E9%85%92%E5%BA%97%20-%3E%20Str%C3%B8get",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 0
+      },
+      {
+        "time": "10:00",
+        "name": "Christiansborg/Slotsholmen",
+        "title": "外观或短线参观",
+        "type": "plan",
+        "lat": 55.6761,
+        "lng": 12.5683,
+        "desc": "45分钟",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Christiansborg/Slotsholmen",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 1
+      },
+      {
+        "time": "11:15",
+        "name": "Nyhavn",
+        "title": "拍照+午餐",
+        "type": "plan",
+        "lat": 55.6798,
+        "lng": 12.591,
+        "desc": "1小时15分",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Nyhavn",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 2
+      },
+      {
+        "time": "12:45",
+        "name": "Amalienborg/Marble Church",
+        "title": "顺路步行",
+        "type": "plan",
+        "lat": 55.684,
+        "lng": 12.593,
+        "desc": "45分钟",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Amalienborg/Marble%20Church",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 3
+      },
+      {
+        "time": "13:45",
+        "name": "Little Mermaid",
+        "title": "可选，可删",
+        "type": "plan",
+        "lat": 55.6929,
+        "lng": 12.5993,
+        "desc": "30分钟",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=Little%20Mermaid",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 4
+      },
+      {
+        "time": "15:00",
+        "name": "去 CPH 机场",
+        "title": "M2/出租车",
+        "type": "transport",
+        "lat": 55.6181,
+        "lng": 12.6561,
+        "desc": "18:00 CA878",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=%E5%8E%BB%20CPH%20%E6%9C%BA%E5%9C%BA",
+        "hours": {
+          "status": "schedule",
+          "open": "按行程",
+          "close": "按行程",
+          "note": "这是行程节点，不是景点营业时间。"
+        },
+        "sort": 5
+      },
+      {
+        "time": "",
+        "name": "斯楚格步行街",
+        "title": "Strøget",
+        "type": "spot",
+        "lat": 55.6781,
+        "lng": 12.5732,
+        "desc": "市中心购物街，适合作为一日游开场。 建议：轻逛即可。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=55.678100%2C12.573200",
+        "hours": {
+          "status": "open-area",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "步行街开放；店铺营业时间另查。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "",
+        "name": "新港",
+        "title": "Nyhavn",
+        "type": "spot",
+        "lat": 55.6798,
+        "lng": 12.591,
+        "desc": "彩色房子和运河是哥本哈根最经典画面。 建议：午餐和拍照都适合。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=55.679800%2C12.591000",
+        "hours": {
+          "status": "open-area",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "开放街区；餐厅营业时间另查。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "",
+        "name": "阿美琳堡宫",
+        "title": "Amalienborg",
+        "type": "spot",
+        "lat": 55.684,
+        "lng": 12.593,
+        "desc": "王宫广场和腓特烈教堂顺路可看。 建议：不入内也有足够体验。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=55.684000%2C12.593000",
+        "hours": {
+          "status": "open-area",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "广场开放；博物馆入内时间另查。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "",
+        "name": "小美人鱼像",
+        "title": "The Little Mermaid",
+        "type": "spot",
+        "lat": 55.6929,
+        "lng": 12.5993,
+        "desc": "名气大于体量，适合作为时间富余时的收尾。 建议：时间紧直接删除。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=55.692900%2C12.599300",
+        "hours": {
+          "status": "open-area",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "户外雕像；时间紧直接删。"
+        },
+        "sort": 50
+      },
+      {
+        "time": "",
+        "name": "哥本哈根",
+        "title": "Copenhagen",
+        "type": "spot",
+        "lat": 55.6761,
+        "lng": 12.5683,
+        "desc": "紧凑、适合步行的一日城市。 建议：把小美人鱼设为可选，不要为它误机。",
+        "googleMaps": "https://www.google.com/maps/search/?api=1&query=55.676100%2C12.568300",
+        "hours": {
+          "status": "open-area",
+          "open": "00:00",
+          "close": "24:00",
+          "note": "城市开放区域；商店餐厅另查。"
+        },
+        "sort": 50
+      }
+    ]
+  }
+];
+    const map = L.map('map', { scrollWheelZoom:true }).setView([64.5, 4], 4);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
+    const layer = L.layerGroup().addTo(map);
+    let current = 0;
+
+    function esc(value) {
+      return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch]));
+    }
+
+    function hoursLine(item) {
+      const h = item.hours || {};
+      if (!h.open && !h.close) return '营业时间：需复核';
+      const status = h.status || 'unverified';
+      return `<span class="status ${esc(status)}">${esc(status)}</span> · 营业/关门：${esc(h.open || '需复核')} - ${esc(h.close || '需复核')}${h.lastEntry ? ' · 最晚入场 ' + esc(h.lastEntry) : ''}${h.note ? '<br>' + esc(h.note) : ''}`;
+    }
+
+    function renderTabs() {
+      document.getElementById('tabs').innerHTML = DAYS.map((d, i) => `<button class="${i === current ? 'active' : ''}" onclick="render(${i})">D${String(i+1).padStart(2,'0')}</button>`).join('');
+    }
+
+    function matches(item, q, day) {
+      if (!q) return true;
+      const hay = [day.date, day.city, day.title, item.name, item.title, item.desc, item.type].join(' ').toLowerCase();
+      return hay.includes(q);
+    }
+
+    function render(index = current) {
+      current = index;
+      const q = document.getElementById('search').value.trim().toLowerCase();
+      const day = DAYS[current];
+      renderTabs();
+      layer.clearLayers();
+      const visible = day.items.filter(item => matches(item, q, day));
+      const bounds = [];
+      for (const item of visible) {
+        if (Number.isFinite(item.lat) && Number.isFinite(item.lng)) {
+          const marker = L.marker([item.lat, item.lng]).addTo(layer);
+          marker.bindPopup(`<strong>${esc(item.name)}</strong><br>${esc(item.time || item.title || '')}<br><a href="${esc(item.googleMaps)}" target="_blank">Google Maps</a>`);
+          bounds.push([item.lat, item.lng]);
+        }
+      }
+      if (bounds.length) map.fitBounds(bounds, { padding:[30,30], maxZoom: 11 });
+      document.getElementById('timeline').innerHTML = `
+        <div class="day-head">
+          <div class="day-title">${esc(day.date)} · ${esc(day.title)}</div>
+          <div class="sun">
+            <span class="chip">日出 ${esc(day.sunrise)}</span>
+            <span class="chip">日落 ${esc(day.sunset)}</span>
+            <span class="chip">${esc(day.city)}</span>
+            ${day.routeUrl ? `<a class="chip route-link" href="${esc(day.routeUrl)}" target="_blank">当天路线 Google Maps</a>` : ''}
+          </div>
+        </div>
+        ${visible.map(item => `
+          <article class="item">
+            <div class="item-top">
+              <div><div class="name">${esc(item.name)}</div><div class="title">${esc(item.title)} · ${esc(item.type)}</div></div>
+              <div class="time">${esc(item.time)}</div>
+            </div>
+            <p class="desc">${esc(item.desc)}</p>
+            <p class="meta">${hoursLine(item)}</p>
+            <div class="actions"><a href="${esc(item.googleMaps)}" target="_blank">Google Maps</a></div>
+          </article>
+        `).join('') || '<p class="subtitle">没有匹配结果。</p>'}
+      `;
+    }
+
+    document.getElementById('search').addEventListener('input', () => render(current));
+    render(0);
+  </script>
+</body>
+</html>
