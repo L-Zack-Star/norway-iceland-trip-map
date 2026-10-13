@@ -1,34 +1,35 @@
-# Nordic Journal 2026 · 北欧追光手记
+# Nordic Journal 2026
 
-原生HTML/CSS/JavaScript静态网站，无安装与构建依赖。18天原始行程数据保留在 `dist/assets/data.js`，包括地图、活动、航班、住宿、备忘、路线备选和时区提示。
+免费、纯静态的18天北欧旅行路书。正式网址：https://leizheqi-star.github.io/norway-iceland-trip-map/
 
-- `dist/index.html`：独立摄影首页；今日路书、全部行程、地图、工具箱四个主入口。每日完整时间线默认可见，补充资料折叠。
-- `dist/assets/journal.js` / `journal.css`：共享物理弹簧滑块与照片查看器。`trip-model.js`负责真实日期、时区与方案模型；`product.js`为唯一页面和弹层控制器，`product-views.js`、`product-map.js`负责界面和本地地图；原实用功能保留在 `app.js`。
-- `dist/offline.html`：原完整单文件离线版，下载后直接打开。
-- `dist/compat.html`：无需脚本的完整阅读版。
-- `dist/share/wechat-2026.jpg`：600×600微信接口用方图。
-- `dist/share/og-2026.jpg`：1200×630静态OG封面。
-- `dist/share/LICENSE.txt`：分享照片署名、原始来源、改编许可。
+## 页面职责
 
-中文使用系统字体，英文使用Georgia；在线交互无需外部字体、图片或CDN。原项目素材保留，新增WebP压缩版本。部分旅游机构原图转载许可需项目持有人复核，分享封面使用明确CC BY-SA 2.0授权的Eric Kilby冰洞照片。
+- 首页按真实日期展示行前准备、旅行中的今日行动，或结束后的摄影回顾。出发前直接显示原始CZ8171航班15:00、9项准备清单和路线，首页不再重复18天目录。
+- 全部行程专门用于18天检索，保留国家和目的地筛选、搜索及返回位置。
+- 每日页先显示当地日期、当前/下一项计划与集合时间，然后默认展开完整时间线。预订和酒店直接归入对应活动；摄影随后，补充资料折叠。
+- 地图分全程/当日两种用途，时间线地点与地图互相定位，返回保留日期、地点和相机位置。本地示意连线不代表道路；真实导航打开Google Maps或Apple Maps。
+- 工具箱直接显示分类内容，日期只筛选资料，不跳到行程页。
 
-GitHub Pages：保留现有仓库，提交本项目至main，在Settings → Pages选择GitHub Actions。`.github/workflows/pages.yml`自动上传 `dist/` 并部署；`scripts/configure-pages.py`在发布时设置github.io正式地址的canonical与OG绝对链接，图片和脚本使用相对路径，支持项目子目录。公开仓库使用免费Pages，不需要服务器、自定义域名或密钥。
+## 代码与素材
 
-每次更新 `dist/` 源文件并推送main，Actions自动部署。仅修改数据时，保持原字段与JSON格式；改分享图建议更换文件名，同时更新index.html元信息，减少缓存干扰。微信仍可能保留历史缓存，不能保证强制刷新。
+原生HTML/CSS/JavaScript，无Node构建依赖。`dist/assets/data.js`保留全部原始行程数据。`trip-model.js`处理时区、按时间合并方案及约定时间；`product-views.js`负责页面结构，`product-map.js`负责本地Leaflet地图，`product.js`统一导航、历史上下文和离线更新。`journal.js`保留可中断的共享弹簧滑块及照片查看器。
 
-微信：没有公众号接口权限、安全域名配置或可信签名服务时，不加载JS-SDK，不承诺自定义卡片。HTML静态元信息可供爬虫读取；方图仅用于具备授权的 `updateAppMessageShareData` / `updateTimelineShareData` 配置，不伪造额外微信元标签。真正接入仍需核实公众号分享接口权限、JS接口安全域名及验证文件部署权、完整URL签名和安全保存AppSecret的服务。纯静态公开仓库不能保存AppSecret。
+没有新增动画依赖。系统字体、照片、Leaflet和地理数据在本站加载。原始`offline.html`和`compat.html`完整保留，约53KB的`essentials.html`提供18天独立离线资料。照片加载失败仍保留文字和图片空间。
 
-支持原生Web Share API，失败时复制链接；微信内引导右上角菜单。无真实iOS/Android微信、Safari或中国大陆无VPN网络测试条件，不将UA模拟或本地Chrome测试视为上述场景通过。
+A/B选择与确认分别保存于本机。当前活动只依据明确的计划时间；“约”“左右”等显示预计安排，不宣称真实活动进度。外部地图、天气和道路实时信息需要联网。
 
-正式网址：https://leizheqi-star.github.io/norway-iceland-trip-map/ 。发布来源使用 GitHub Actions，避免旧分支发布流程覆盖新版。原仓库地图保存在 legacy/index.html，文件未删除。
+## 免费自动部署及更新
 
+现有公开仓库的Settings → Pages使用GitHub Actions。`.github/workflows/pages.yml`在main更新后执行`scripts/configure-pages.py`及`build-essentials.py`，自动生成正式资源地址、独立资料、离线版本，再上传dist至Pages。无需付费服务器、域名或账号。
 
-## 产品版更新（2026-10-13）
+修改源码或真实资料后推送main即可。原数据字段不能随意改名，不要提交私人订单、证件、联系方式、密钥。`dist/dist/index.html`兼容曾使用的/dist/地址；哈希日程可直接刷新。
 
-今日按计划所在地时区计算：出发前显示倒计时与首日预览，旅行结束后显示结束状态与末日回顾。当前/下一项仅使用原计划明确时间；不声称活动实际开始或完成。A/B、火车/出租车方案同步更新时间线和地图，选择与清单保存在本机。
+Service Worker完整缓存17项核心资源，新版先完整下载，用户接受更新后再共同启用HTML、脚本和数据。照片仅访问后缓存，不能保证所有照片离线可见。首次缓存后必须在同一浏览器断网试开。旧缓存不自动删除。
 
-地图直接打开，Leaflet和地理边界在本站加载，不依赖外部地图瓦片；示意连线不等于驾车路线。地点与列表联动，外部导航可选Google Maps或Apple Maps。哈希地址支持直接分享和刷新，旧overview/orders/memo地址仍有兼容入口。
+## 分享与测试边界
 
-`dist/essentials.html` 是约53KB、无外部依赖的关键资料页，可打印或保存。`dist/sw.js` + `offline-manifest.json` 提供按版本缓存、14项关键资源逐项核验和更新提示；微信可能不支持或保留缓存，须在同一浏览器断网验证。照片仅浏览后缓存，不承诺所有照片离线可用。原完整离线文件保留。
+静态标题、description、OG、Twitter和canonical保留。原方图`dist/share/wechat-2026.jpg`、横图`og-2026.jpg`保留；新增900×1350独立海报`poster-2026-v4.jpg`及`qr-2026.svg`使用同一授权冰洞照片，许可见LICENSE.txt。二维码指向正式根网址。图片可以保存，支持系统图片分享的浏览器会显示对应入口。
 
-构建时自动运行 `scripts/build-essentials.py`，从未改动的data.js生成精简资料和版本摘要。修改源码后推送main即可自动发布，无需Node构建或付费账号。勿把私人票据、订单编号、证件、个人联系方式或密钥加入公开数据及附件。
+用户最新确认已自行解决微信分享问题，本轮停止微信排障，不修改公众号、域名、签名服务或JS-SDK配置。该结果是用户反馈，未进行独立微信复测。
+
+375/390/430/768/1440布局、18天/20种已选行程、时区与夏令时、快速切换、历史返回、图片浏览、键盘焦点、减少动态效果、图片失败、真实浏览器断网重载及双版本更新已有Chrome自动化验证。旅行三个阶段使用固定测试日期模拟。未验证真实iOS/Android微信、Safari、系统地图App、系统分享面板或中国大陆无VPN网络稳定性。

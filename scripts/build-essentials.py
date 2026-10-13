@@ -27,12 +27,16 @@ head='''<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name
 nav='<nav>'+''.join(f'<a href="#day-{d["id"]}">{esc(d["date"][5:])}</a>' for d in data['days'])+'</nav>'
 end='''<section><h2>应急电话（原路书资料）</h2><p>芬兰、冰岛、丹麦：112；挪威：医疗113、火警110、警方112。说明位置、路号和人数。</p><p>天气、道路、机场状态须向官方查询，离线页不包含实时状态。</p></section></body></html>'''
 (root/'essentials.html').write_text(head+nav+''.join(out)+end,encoding='utf-8')
-assets=['index.html','essentials.html','favicon.svg','assets/data.js','assets/app.js','assets/trip-model.js','assets/journal.js','assets/product-views.js','assets/product-map.js','assets/product.js','assets/legacy.css','assets/journal.css','assets/product.css','assets/leaflet.js']
+assets=['index.html','essentials.html','favicon.svg','assets/data.js','assets/app.js','assets/trip-model.js','assets/journal.js','assets/product-views.js','assets/product-map.js','assets/product.js','assets/share.js','share/poster-2026-v4.jpg','share/qr-2026.svg','assets/legacy.css','assets/journal.css','assets/product.css','assets/leaflet.js']
 digest=hashlib.sha256(b''.join((root/file).read_bytes() for file in assets)).hexdigest()[:16]
 (root/'offline-manifest.json').write_text(json.dumps({'version':digest,'assets':assets}),encoding='utf-8')
 print('Standalone essentials:',(root/'essentials.html').stat().st_size,'bytes; offline version:',digest)
 
 # A byte change makes browsers discover a new worker after each asset revision.
 worker=root/'sw.js'
-worker_text=re.sub(r'^/\* Roadbook revision: [^*]+\*/\n','',worker.read_text(encoding='utf-8'))
+worker_text=re.sub(r'^/\* Roadbook revision: [^*]+\*/\n','',worker.read_text(encoding='utf-8'));worker_text=re.sub(r"const ROADBOOK_VERSION='[^']+';","const ROADBOOK_VERSION='"+digest+"';",worker_text)
 worker.write_text('/* Roadbook revision: '+digest+' */\n'+worker_text,encoding='utf-8')
+
+# A legacy /dist/ URL receives the same static metadata and resolves assets at root.
+alias=root/'dist';alias.mkdir(exist_ok=True)
+(alias/'index.html').write_text((root/'index.html').read_text(encoding='utf-8').replace('<head>','<head><base href="../">',1),encoding='utf-8')

@@ -2,3 +2,5 @@ Photo: Blue Ice Cave by Eric Kilby, CC BY-SA 2.0.
 https://commons.wikimedia.org/wiki/File:Blue_Ice_Cave_-_Flickr_-_Eric_Kilby.jpg
 https://creativecommons.org/licenses/by-sa/2.0/
 Changes: crop, resize, dark caption area and typography. These cover adaptations are distributed under CC BY-SA 2.0.
+
+The static poster poster-2026-v4.jpg reuses the same photograph with original canvas typography and a QR code to the public website; distributed under CC BY-SA 2.0.

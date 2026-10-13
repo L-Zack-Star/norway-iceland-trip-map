@@ -32,15 +32,24 @@ function stepWindow(day,row){
  else if(clocks.length>1)end=tripLocalTimestamp(day.date,clocks[clocks.length-1],z.end);
  else if(/最迟|前$|^[^\d]*至\d/.test(row.time)){end=start;deadline=true;}
  if(end!==null&&end<start)end+=86400000;
- return {start,end,deadline,zone:z.start};
+ return {start,end,deadline,uncertain:/约|左右|至/.test(row.time),zone:z.start};
 }
 
 const tripCalendarChanges=tripZoneChanges(DATA.days);
+const derivedFlights=new WeakMap();
+function flightRows(day){if(!derivedFlights.has(day))derivedFlights.set(day,(day.flights||[]).filter(f=>!day.timeline.some(r=>r.text.includes(f[0]))).map(f=>({time:f[3]+' → '+f[6],text:f[0]+' · '+f[2]+' '+f[1]+' → '+f[5]+' '+f[4]+'；起降均为当地时间。',stepTitle:'出发航班',nav:[],critical:'原始航班时间，动态须向航司查询'})));return derivedFlights.get(day);}
+function mergePlan(day,lanes){
+ const keyed=lanes.flatMap((rows,lane)=>{let previous=null;return rows.map((row,i)=>{const own=stepWindow(day,row)?.start;const next=rows.slice(i+1).map(r=>stepWindow(day,r)?.start).find(Number.isFinite);let key=Number.isFinite(own)?own:previous??(Number.isFinite(next)?next:Infinity);if(/前一晚/.test(row.time))key=-Infinity;if(Number.isFinite(own))previous=own;return {row,key,lane,i};});});
+ return keyed.sort((a,b)=>a.key-b.key||a.lane-b.lane||a.i-b.i).map(x=>x.row);
+}
 function selectedPlan(day,variants=state.variants,transport=state.transport){
- const branch=day.variants?.[variants[day.id]||'A'];
- let extra=branch?.timeline||[];
- if(day.id===1&&variants[1]==='B')extra=extra.filter(r=>transport==='train'?r.time!=='22:00前':r.time!=='21:45');
- return [...day.timeline,...extra];
+ const branch=day.variants?.[variants[day.id]||'A'];let extra=branch?.timeline||[];
+ if(day.id===1&&variants[1]==='B')extra=extra.filter(r=>transport==='train'?r.time!=='22:00前':transport==='taxi'?r.time!=='21:45':true);
+ return mergePlan(day,[flightRows(day),day.timeline,extra]);
+}
+function bookingRow(day,booking,rows=selectedPlan(day)){let i=rows.findIndex(r=>/报到|集合/.test(r.stepTitle||'')&&r.time.includes(booking.report));if(i<0)i=rows.findIndex(r=>(r.nav||[]).includes(booking.spot));return i;}
+function selectedVisits(day){const rows=selectedPlan(day),items=[],route=selectedRoute(day);for(let i=0;i<rows.length;i++){const r=rows[i],booking=DATA.bookings.find(b=>b.day===day.id&&bookingRow(day,b,rows)===i);let keys=[...(booking?.parking?[booking.parking]:[]),...(r.nav||[]),...(booking?[booking.meeting||booking.spot]:[])];for(const key of [...new Set(keys)]){const alias=key.startsWith('hotel:')&&DATA.places[key.slice(6)]?key.slice(6):key;const p=DATA.places[alias]||(key.startsWith('hotel:')?DATA.hotels[key.slice(6)]:null);if(!p)continue;items.push({key:alias,p,day:day.id,step:i,time:r.time,title:r.stepTitle,kind:booking?.parking===key?'停车地点':booking&&(booking.meeting||booking.spot)===key?'集合 / 报到':'行程地点'});}}
+ for(const key of route){if(!items.some(x=>x.key===key)&&DATA.places[key])items.push({key,p:DATA.places[key],day:day.id,step:null,time:'原路线点位，未单列时间',title:'路线补充',kind:'原路线点位'});}return items;
 }
 function selectedSpots(day,variants=state.variants){return day.variants?.[variants[day.id]||'A']?.spots||day.spots||[];}
 function selectedRoute(day,variants=state.variants){
@@ -55,8 +64,8 @@ function planPosition(day,now=new Date(),rows=selectedPlan(day)){
  // untimed and approximate-ended plans never acquire an invented duration.
  const windows=rows.map(r=>stepWindow(day,r));
  const time=+now;
- const active=windows.map((w,i)=>({w,i})).filter(x=>x.w&&!x.w.deadline&&x.w.end!==null&&x.w.start<=time&&time<x.w.end);
+ const active=windows.map((w,i)=>({w,i})).filter(x=>x.w&&!x.w.deadline&&!x.w.uncertain&&x.w.end!==null&&x.w.start<=time&&time<x.w.end);
  const current=active.sort((a,b)=>b.w.start-a.w.start)[0]?.i??-1;
  const next=windows.map((w,i)=>({w,i})).filter(x=>x.w&&x.w.start>time).sort((a,b)=>a.w.start-b.w.start)[0]?.i??-1;
- return {current,next,live:true};
+ const approximate=windows.map((w,i)=>({w,i})).filter(x=>x.w&&x.w.uncertain&&x.w.end!==null&&x.w.start<=time&&time<x.w.end).sort((a,b)=>b.w.start-a.w.start)[0]?.i??-1;return {current,next,approximate,live:true};
 }
