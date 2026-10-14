@@ -1,6 +1,6 @@
 'use strict';
 const reduced=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
-const journalTitle='北欧追光手记 | Nordic Journal 2026';
+const journalTitle='北欧路书 | Nordic Journal 2026';
 const journalDescription='挪威与冰岛的秋冬旅行，记录极光、鲸群、峡湾与冰川。';
 const smallPhoto=k=>PHOTO_VARIANTS[pImage(k)]?.small||pImage(k);
 const photoAttributes=src=>{const v=PHOTO_VARIANTS[src];return v?`srcset="${v.small} ${v.smallWidth}w, ${src} ${v.width}w" sizes="(max-width:760px) calc(100vw - 40px), 860px"`:'';};

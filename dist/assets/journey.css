@@ -55,3 +55,12 @@ body[data-view=day] #page>.utility-actions{border:0;margin-top:4px;padding:0;gap
 .emergency-contacts>h2:first-child{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
 .emergency-contacts>p:first-of-type{margin-top:0}
 .emergency-contacts>h3:first-of-type{margin-top:8px}
+
+/* Route controls: three full-width segments, one aligned date/action row. */
+.segments.map-mode{grid-template-columns:repeat(3,minmax(0,1fr));width:100%;max-width:none;box-sizing:border-box}
+.map-date-actions.utility-actions{display:grid;grid-template-columns:minmax(0,1fr) max-content max-content;gap:8px;align-items:center}
+.map-date-actions>.journey-date{min-width:0;max-width:none}
+.map-date-actions .journey-date>span{display:none}
+.map-date-actions select{height:44px;min-width:0;box-sizing:border-box;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.map-date-actions>button{height:44px;min-height:44px;margin:0;padding:4px 6px;white-space:nowrap}
+@media(max-width:760px){.map-date-actions select{font-size:12px;padding:8px 24px 8px 8px}.map-date-actions>button{font-size:12px;padding:4px 2px}.map-date-actions.utility-actions{gap:6px}}
