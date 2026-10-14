@@ -64,3 +64,9 @@ body[data-view=day] #page>.utility-actions{border:0;margin-top:4px;padding:0;gap
 .map-date-actions select{height:44px;min-width:0;box-sizing:border-box;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .map-date-actions>button{height:44px;min-height:44px;margin:0;padding:4px 6px;white-space:nowrap}
 @media(max-width:760px){.map-date-actions select{font-size:12px;padding:8px 24px 8px 8px}.map-date-actions>button{font-size:12px;padding:4px 2px}.map-date-actions.utility-actions{gap:6px}}
+
+/* Daily date navigation lives in the sticky toolbar only. */
+body[data-view=day] .day-top-controls{display:grid;grid-template-columns:max-content minmax(0,1fr) max-content;gap:8px}
+.day-top-controls>.journey-date{min-width:0;max-width:none}
+.day-top-controls select{width:100%;height:44px;box-sizing:border-box;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:760px){.day-top-controls>button{padding:8px 2px}body[data-view=day] .day-top-controls{gap:6px}}
