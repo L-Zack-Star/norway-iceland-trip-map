@@ -27,7 +27,7 @@ head='''<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name
 nav='<nav>'+''.join(f'<a href="#day-{d["id"]}">{esc(d["date"][5:])}</a>' for d in data['days'])+'</nav>'
 end='''<section><h2>应急电话（原路书资料）</h2><p>芬兰、冰岛、丹麦：112；挪威：医疗113、火警110、警方112。说明位置、路号和人数。</p><p>天气、道路、机场状态须向官方查询，离线页不包含实时状态。</p></section></body></html>'''
 (root/'essentials.html').write_text(head+nav+''.join(out)+end,encoding='utf-8',newline='\n')
-assets=['index.html','essentials.html','favicon.svg','assets/data.js','assets/app.js','assets/trip-model.js','assets/journal.js','assets/product-views.js','assets/product-map.js','assets/product.js','assets/share.js','share/poster-2026-v4.jpg','share/qr-2026.svg','assets/legacy.css','assets/journal.css','assets/product.css','assets/leaflet.js']
+assets=['index.html','essentials.html','favicon.svg','assets/data.js','assets/app.js','assets/trip-model.js','assets/journal.js','assets/product-views.js','assets/product-map.js','assets/product.js','assets/share.js','share/poster-2026-v4.jpg','share/qr-2026.svg','assets/legacy.css','assets/journal.css','assets/product.css','assets/leaflet.js','assets/travel-support.js','assets/journey-views.js','assets/journey.css','assets/road-routes.js']
 digest=hashlib.sha256(b''.join((root/file).read_bytes() for file in assets)).hexdigest()[:16]
 (root/'offline-manifest.json').write_text(json.dumps({'version':digest,'assets':assets}),encoding='utf-8',newline='\n')
 print('Standalone essentials:',(root/'essentials.html').stat().st_size,'bytes; offline version:',digest)
