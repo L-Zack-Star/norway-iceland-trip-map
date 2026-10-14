@@ -126,9 +126,9 @@ const WEATHER_SERVICE = (() => {
   }
   return options[0];
  }
- function readCache(key){try{return memory.get(key)||JSON.parse(localStorage.getItem('nj-weather-v1:'+key)||'null');}catch{return memory.get(key)||null;}}
- function cache(key,result){memory.set(key,result);try{localStorage.setItem('nj-weather-v1:'+key,JSON.stringify(result));}catch{}}
- function codeText(code){return code===0?'晴':code<=3?'晴间多云':code<=48?'雾':code<=57?'毛毛雨':code<=67?'雨':code<=77?'雪':code<=82?'阵雨':code<=86?'阵雪':'雷雨';}
+ function readCache(key){try{return memory.get(key)||JSON.parse(localStorage.getItem('nj-weather-v2:'+key)||'null');}catch{return memory.get(key)||null;}}
+ function cache(key,result){memory.set(key,result);try{localStorage.setItem('nj-weather-v2:'+key,JSON.stringify(result));}catch{}}
+ function codeText(code){return ({0:'晴',1:'大部晴',2:'多云',3:'阴',45:'雾',48:'雾',51:'毛毛雨',53:'毛毛雨',55:'毛毛雨',56:'冻毛毛雨',57:'冻毛毛雨',61:'雨',63:'雨',65:'雨',66:'冻雨',67:'冻雨',71:'雪',73:'雪',75:'雪',77:'雪粒',80:'阵雨',81:'阵雨',82:'阵雨',85:'阵雪',86:'阵雪',95:'雷雨',96:'雷雨伴冰雹',99:'雷雨伴冰雹'})[code]||'查看官方天气说明';}
  async function load(day,p,now=new Date()){
   if(!p)return {status:'unavailable',date:day.date,summary:'请打开当地气象网站查看天气。'};
   const base={date:day.date,place:p.name,official:p.official,source:'https://open-meteo.com/',zone:p.zone};
@@ -151,18 +151,19 @@ const WEATHER_SERVICE = (() => {
  }
  function renderShell(day,rows=day.timeline,now=new Date()){
   const options=choices(day,rows,now),p=selected(day,rows,now);if(!p)return '';
-  return `<div class="travel-weather" data-weather-day="${day.id}"><label>天气地点<select data-weather-place aria-label="选择天气地点">${options.map(x=>`<option value="${e(x.key)}" ${x.key===p.key?'selected':''}>${e(x.name)}</option>`).join('')}</select></label><div data-weather-result aria-live="polite"><p>${e(day.date)} · ${e(p.name)}</p><p>按计划所在位置查看当日预报；转场可切换目的地。</p></div><button class="small-link" data-weather-load>加载天气预报</button><a class="small-link" data-weather-official href="${e(p.official)}" target="_blank" rel="noopener noreferrer">当地气象网站</a><small>天气数据 <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a></small></div>`;
+  return `<div class="travel-weather" data-weather-day="${day.id}"><label>天气<select data-weather-place aria-label="选择天气地点">${options.map(x=>`<option value="${e(x.key)}" ${x.key===p.key?'selected':''}>${e(x.name)}</option>`).join('')}</select></label><div data-weather-result aria-live="polite"><p>${e(day.date)} · ${e(p.name)}</p><p>正在获取当天预报…</p></div><button class="small-link" data-weather-load>刷新</button><a class="small-link" data-weather-official href="${e(p.official)}" target="_blank" rel="noopener noreferrer">当地气象网站</a><small>天气数据 <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a></small></div>`;
  }
  function mount(element,day,rows=day.timeline,now=new Date()){
   if(!element||element.dataset.weatherMounted)return;element.dataset.weatherMounted='true';let version=0;
   const options=choices(day,rows,now),select=element.querySelector('[data-weather-place]'),button=element.querySelector('[data-weather-load]'),result=element.querySelector('[data-weather-result]'),link=element.querySelector('[data-weather-official]');if(!select||!button||!result)return;
   const picked=()=>options.find(p=>p.key===select.value)||options[0];
-  select.addEventListener('change',()=>{version++;const p=picked();button.disabled=false;button.textContent='加载天气预报';result.innerHTML=`<p>${e(day.date)} · ${e(p.name)}</p><p>点击加载此地点的预报。</p>`;if(link)link.href=p.official;});
+  select.addEventListener('change',()=>{element.dataset.userPlace='true';version++;const p=picked();button.disabled=false;button.textContent='加载天气预报';result.innerHTML=`<p>${e(day.date)} · ${e(p.name)}</p><p>点击加载此地点的预报。</p>`;if(link)link.href=p.official;button.click();});
   button.addEventListener('click',async()=>{const token=++version;button.disabled=true;button.textContent='正在加载…';const p=picked(),r=await load(day,p);if(token!==version||!element.isConnected)return;
    const has=Number.isFinite(r.temperatureMin),fresh=has?` · ${new Intl.DateTimeFormat('zh-CN',{timeZone:p.zone,month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(r.updatedAt))} ${r.status==='stale'?'保存':'获取'}`:'';
-   result.innerHTML=`<p>${e(r.date)} · ${e(r.place)}${e(fresh)}</p><p><strong>${e(r.summary)}${has?' · '+e(r.temperatureMin)+'–'+e(r.temperatureMax)+' °C':''}</strong>${has&&Number.isFinite(r.precipitationProbability)?' · 降水概率 '+e(r.precipitationProbability)+'%':''}${has&&Number.isFinite(r.windMax)?' · 最大风速 '+e(r.windMax)+' m/s':''}${has&&Number.isFinite(r.gustMax)?' · 阵风 '+e(r.gustMax)+' m/s':''}</p>`;
-   button.disabled=false;button.textContent='刷新天气';
+   result.innerHTML=`<p>预报 ${e(r.date.slice(5).replace('-','/'))}${e(fresh)}</p><p><strong>${e(r.summary)}${has?' · '+e(r.temperatureMin)+'–'+e(r.temperatureMax)+' °C':''}</strong>${has&&Number.isFinite(r.precipitationProbability)?' · 降雨 '+e(r.precipitationProbability)+'%':''}${has&&Number.isFinite(r.windMax)?' · 风 '+e(r.windMax)+' m/s':''}${has&&Number.isFinite(r.gustMax)?' · 阵风 '+e(r.gustMax)+' m/s':''}</p>`;
+   button.disabled=false;button.textContent='刷新';
   });
+  button.click();
  }
  return Object.freeze({choices,selected,load,renderShell,mount});
 })();
