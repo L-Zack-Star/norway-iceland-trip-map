@@ -63,6 +63,8 @@ const TRAVEL_SUPPORT = (() => {
  };
  function placeParking(key) {
   const p=DATA.places[key]; if(!p)return null;
+  const enriched=typeof PRACTICAL_TRAVEL==='undefined'?null:PRACTICAL_TRAVEL.parking(key);
+  if(enriched)return {placeKey:key,text:enriched.where,links:enriched.sources.map(x=>({label:x.label,url:x.url})),action:null};
   const text=key==='sky'?'按园区访客停车指示停放，收费与规则看现场标牌或预约指引。':key==='p5'?'P5按辛格维利尔当日停车规则缴费；保存车牌和付款收据。':p.parking;
   if(!text)return null;
   const links=pay[key]?[{label:pay[key][0],url:pay[key][1]}]:[];
