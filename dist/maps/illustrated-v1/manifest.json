@@ -1,0 +1,105 @@
+{
+  "version": "illustrated-v1",
+  "assets": [
+    {
+      "region": "tromso",
+      "file": "tromso-3840b34c4f23.webp",
+      "bytes": 564434,
+      "originalSize": [
+        1149,
+        1369
+      ],
+      "sha256": "3840b34c4f239802990b1789525eee65319c3f7c4b07b379b2e58bc58ef43cc1"
+    },
+    {
+      "region": "lofoten",
+      "file": "lofoten-289169a1363f.webp",
+      "bytes": 305646,
+      "originalSize": [
+        1149,
+        1369
+      ],
+      "sha256": "289169a1363feb005bc83aa79d28138534bae885e2ab67d7cce16020ae01902d"
+    },
+    {
+      "region": "oslo",
+      "file": "oslo-bd065ca2a88d.webp",
+      "bytes": 562974,
+      "originalSize": [
+        1149,
+        1369
+      ],
+      "sha256": "bd065ca2a88d4588ccd8c4761046db6f7413eac87602f171c640c45274a30f1b"
+    },
+    {
+      "region": "helsinki",
+      "file": "helsinki-1b02cd0ce2cf.webp",
+      "bytes": 578474,
+      "originalSize": [
+        1149,
+        1369
+      ],
+      "sha256": "1b02cd0ce2cf1d97fd8bc02546003ec378336e768eb5210d4b896272c95549bb"
+    },
+    {
+      "region": "copenhagen",
+      "file": "copenhagen-b0c545d2d647.webp",
+      "bytes": 554430,
+      "originalSize": [
+        1149,
+        1369
+      ],
+      "sha256": "b0c545d2d64798176f23018192d3cf1a5c47913287034cbde9ee71d2152bdaa6"
+    },
+    {
+      "region": "iceland",
+      "file": "iceland-8219b999e156.webp",
+      "bytes": 461822,
+      "originalSize": [
+        1149,
+        1369
+      ],
+      "sha256": "8219b999e1560a27e02767148729438b44db530dbcc920e8e4971773cb3eb77a"
+    },
+    {
+      "region": "beijing",
+      "file": "beijing-c7b307c65117.webp",
+      "bytes": 657556,
+      "originalSize": [
+        1149,
+        1369
+      ],
+      "sha256": "c7b307c65117e673e33e31444ac9115f6b28d83f8d5110e004f9d6df65ed89b2"
+    },
+    {
+      "region": "overview",
+      "file": "overview-3cb9bbaab4af.webp",
+      "bytes": 470130,
+      "originalSize": [
+        1149,
+        1369
+      ],
+      "sha256": "3cb9bbaab4af8af97df7e1341cf80be0d757485db79904cdafcf8795b70a56c8"
+    },
+    {
+      "region": "world",
+      "file": "world-24733fe8c60c.webp",
+      "bytes": 568950,
+      "originalSize": [
+        1149,
+        1369
+      ],
+      "sha256": "24733fe8c60c04e615e72f870ae5933bfb82b59b1c87f6c9cccf282b60ece8be"
+    },
+    {
+      "region": "lagoon",
+      "file": "lagoon-cfc7cb50dd39.webp",
+      "bytes": 440772,
+      "originalSize": [
+        1147,
+        1371
+      ],
+      "sha256": "cfc7cb50dd39fbb3ba30c4735848c5b86e226ad00593339dc7934edd80b83f2f"
+    }
+  ]
+}

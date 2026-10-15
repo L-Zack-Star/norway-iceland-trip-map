@@ -1,7 +1,7 @@
-/* Roadbook revision: 4924048a44ad36e5 */
+/* Roadbook revision: 8a60bdbbbf70a927 */
 /* A release keeps core HTML/JS/data together until the user accepts its update. */
 'use strict';
-const ROADBOOK_VERSION='4924048a44ad36e5';
+const ROADBOOK_VERSION='8a60bdbbbf70a927';
 const CACHE='nordic-roadbook-'+ROADBOOK_VERSION;
 let manifestPromise=null;
 const manifest=()=>manifestPromise||(manifestPromise=fetch(new URL('offline-manifest.json',self.registration.scope),{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('资源清单获取失败');return r.json();}).then(m=>{if(m.version!==ROADBOOK_VERSION)throw Error('发布版本尚未一致，请稍后重试');return m;}));

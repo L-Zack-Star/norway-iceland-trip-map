@@ -1,0 +1,137 @@
+{
+  "tromso": {
+    "bounds": [
+      18.502429322468437,
+      69.5,
+      19.347570677531564,
+      69.85
+    ],
+    "width": 1170,
+    "height": 1395,
+    "sources": [
+      "Natural Earth 1:10m land / glaciated areas",
+      "OSM raw geometry / existing OSRM roads"
+    ],
+    "reference": "tromso-geographic-reference.png"
+  },
+  "lofoten": {
+    "bounds": [
+      12.7,
+      67.58558227145643,
+      15,
+      68.60838189419154
+    ],
+    "width": 1170,
+    "height": 1395,
+    "sources": [
+      "Natural Earth 1:10m land / glaciated areas",
+      "OSM raw geometry / existing OSRM roads"
+    ],
+    "reference": "lofoten-geographic-reference.png"
+  },
+  "oslo": {
+    "bounds": [
+      10.46334832057869,
+      59.75,
+      11.38665167942131,
+      60.3
+    ],
+    "width": 1170,
+    "height": 1395,
+    "sources": [
+      "Natural Earth 1:10m land / glaciated areas",
+      "OSM raw geometry / existing OSRM roads"
+    ],
+    "reference": "oslo-geographic-reference.png"
+  },
+  "helsinki": {
+    "bounds": [
+      24.65,
+      60.05226211644562,
+      25.25,
+      60.40746200019821
+    ],
+    "width": 1170,
+    "height": 1395,
+    "sources": [
+      "Natural Earth 1:10m land / glaciated areas",
+      "OSM raw geometry / existing OSRM roads"
+    ],
+    "reference": "helsinki-geographic-reference.png"
+  },
+  "copenhagen": {
+    "bounds": [
+      12.45,
+      55.56411083718084,
+      12.75,
+      55.765859761178085
+    ],
+    "width": 1170,
+    "height": 1395,
+    "sources": [
+      "Natural Earth 1:10m land / glaciated areas",
+      "OSM raw geometry / existing OSRM roads"
+    ],
+    "reference": "copenhagen-geographic-reference.png"
+  },
+  "iceland": {
+    "bounds": [
+      -23.2,
+      61.926239908122106,
+      -15.5,
+      65.95182282549752
+    ],
+    "width": 1170,
+    "height": 1395,
+    "sources": [
+      "Natural Earth 1:10m land / glaciated areas",
+      "OSM raw geometry / existing OSRM roads"
+    ],
+    "reference": "iceland-geographic-reference.png"
+  },
+  "beijing": {
+    "bounds": [
+      116.0455899550033,
+      39.4,
+      116.75441004499672,
+      40.05
+    ],
+    "width": 1170,
+    "height": 1395,
+    "sources": [
+      "Natural Earth 1:10m land / glaciated areas",
+      "OSM raw geometry / existing OSRM roads"
+    ],
+    "reference": "beijing-geographic-reference.png"
+  },
+  "overview": {
+    "bounds": [
+      -27,
+      44.34511509766622,
+      31,
+      75.64836993494974
+    ],
+    "width": 1170,
+    "height": 1395,
+    "sources": [
+      "Natural Earth 1:10m land / glaciated areas",
+      "OSM raw geometry / existing OSRM roads"
+    ],
+    "reference": "overview-geographic-reference.png"
+  },
+  "world": {
+    "bounds": [
+      -30,
+      -17.221600114706717,
+      125,
+      83.82747443239319
+    ],
+    "width": 1170,
+    "height": 1395,
+    "sources": [
+      "Natural Earth 1:10m land / glaciated areas",
+      "OSM raw geometry / existing OSRM roads"
+    ],
+    "reference": "world-geographic-reference.png"
+  }
+}
