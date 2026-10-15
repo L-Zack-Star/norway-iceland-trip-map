@@ -1,0 +1,51 @@
+{
+  "version": "ice-lagoon-v1",
+  "day": 13,
+  "date": "2026-10-30",
+  "crs": "EPSG:3857",
+  "bounds": [
+    [
+      63.98,
+      -16.55
+    ],
+    [
+      64.29,
+      -15.72
+    ]
+  ],
+  "maxZoom": 16,
+  "cameraContext": [
+    64.15,
+    -16.35
+  ],
+  "reliefSourceGroundResolutionMetres": 16.7,
+  "assets": [
+    {
+      "file": "relief-overview.webp",
+      "bytes": 20136,
+      "sha256": "3e92b635d8c9b057355c60a5fe7857b24de3c83e98f220161d90f1bfde7edd63"
+    },
+    {
+      "file": "relief-detail.webp",
+      "bytes": 273438,
+      "sha256": "455ee269c0d841764adca106395a54ccc12b3746072f83d6b97a2eebb9aa454c"
+    },
+    {
+      "file": "geography.json",
+      "bytes": 675886,
+      "sha256": "967d2fd0012fb6a10c42c3e89ef6b4b8d08c5f291435804ac6148e2ed4c8bb5d"
+    },
+    {
+      "file": "LICENSE.md",
+      "bytes": 2436,
+      "sha256": "0d76903e04d66eee8d42475781faf58db2f175c89c9f8a30178d930bb405e83f"
+    }
+  ],
+  "sources": {
+    "elevation": "https://registry.opendata.aws/terrain-tiles/",
+    "elevationLicense": "https://github.com/tilezen/joerd/blob/master/docs/attribution.md",
+    "osm": "https://api.openstreetmap.org/api/0.6/map",
+    "osmLicense": "https://www.openstreetmap.org/copyright"
+  },
+  "sourceDataTime": "2026-10-15"
+}

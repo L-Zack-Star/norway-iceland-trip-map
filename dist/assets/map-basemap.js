@@ -32,5 +32,5 @@ function mountTerrain(target){
  layer.on('load',loaded).on('tileerror',fallback);
  timer=setTimeout(fallback,12000);layer.addTo(target);terrainCaption();
 }
-window.addEventListener('offline',()=>{clearTerrain();terrainState='fallback';terrainCaption();});
+window.addEventListener('offline',()=>{if(typeof isLocalMapActive==='function'&&isLocalMapActive()){terrainCaption();return;}clearTerrain();terrainState='fallback';terrainCaption();});
 window.addEventListener('online',()=>{if(map)mountTerrain(map);});

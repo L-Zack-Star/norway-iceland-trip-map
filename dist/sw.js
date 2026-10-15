@@ -1,7 +1,7 @@
-/* Roadbook revision: 69c12fb13e902729 */
+/* Roadbook revision: 4924048a44ad36e5 */
 /* A release keeps core HTML/JS/data together until the user accepts its update. */
 'use strict';
-const ROADBOOK_VERSION='69c12fb13e902729';
+const ROADBOOK_VERSION='4924048a44ad36e5';
 const CACHE='nordic-roadbook-'+ROADBOOK_VERSION;
 let manifestPromise=null;
 const manifest=()=>manifestPromise||(manifestPromise=fetch(new URL('offline-manifest.json',self.registration.scope),{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('资源清单获取失败');return r.json();}).then(m=>{if(m.version!==ROADBOOK_VERSION)throw Error('发布版本尚未一致，请稍后重试');return m;}));
@@ -15,7 +15,7 @@ self.addEventListener('message',event=>{
 });
 self.addEventListener('fetch',event=>{
  const url=new URL(event.request.url);if(event.request.method!=='GET'||url.origin!==location.origin||!url.href.startsWith(self.registration.scope))return;
- event.respondWith((async()=>{const cache=await caches.open(CACHE),scope=new URL(self.registration.scope);let clean=new URL(url);clean.search='';if(event.request.mode==='navigate'&&(clean.pathname===scope.pathname||clean.pathname.endsWith('/index.html')||clean.pathname===scope.pathname+'dist/'))clean=new URL('index.html',scope);const manifestHit=await cache.match(new URL('offline-manifest.json',scope)),m=manifestHit?await manifestHit.json():null,relative=clean.pathname.slice(scope.pathname.length),core=m?.assets.includes(relative)||relative==='offline-manifest.json';const hit=await cache.match(clean);if(core&&hit){if(event.request.mode==='navigate'&&url.pathname===scope.pathname+'dist/'){const html=await hit.text();return new Response(html.replace('<head>','<head><base href="'+scope.href+'">'),{headers:{'Content-Type':'text/html;charset=utf-8'}});}return hit;}
+ event.respondWith((async()=>{const cache=await caches.open(CACHE),scope=new URL(self.registration.scope);let clean=new URL(url);clean.search='';if(event.request.mode==='navigate'&&(clean.pathname===scope.pathname||clean.pathname.endsWith('/index.html')||clean.pathname===scope.pathname+'dist/'))clean=new URL('index.html',scope);const manifestHit=await cache.match(new URL('offline-manifest.json',scope)),m=manifestHit?await manifestHit.json():null,relative=clean.pathname.slice(scope.pathname.length),core=m?.assets.includes(relative)||relative==='offline-manifest.json';const localPack=relative.match(/^maps\/([^/]+)\//);if(localPack&&event.request.cache!=='reload'){const prepared=await(await caches.open('nordic-map-'+localPack[1])).match(clean);if(prepared)return prepared;}const hit=await cache.match(clean);if(core&&hit){if(event.request.mode==='navigate'&&url.pathname===scope.pathname+'dist/'){const html=await hit.text();return new Response(html.replace('<head>','<head><base href="'+scope.href+'">'),{headers:{'Content-Type':'text/html;charset=utf-8'}});}return hit;}
  try{const response=await fetch(event.request);if(response.ok&&/\.(?:webp|jpg|svg)$/.test(url.pathname))await cache.put(clean,response.clone());return response;}catch(e){if(hit)return hit;if(event.request.mode==='navigate'){const fallback=await cache.match(new URL('essentials.html',scope));if(fallback)return fallback;}throw e;}
  })());
 });
