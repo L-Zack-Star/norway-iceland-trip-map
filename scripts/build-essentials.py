@@ -49,9 +49,21 @@ for path in re.findall(r'<(?:script|link)\b[^>]*(?:src|href)=[\'\"]([^\'\"]+)[\'
 for path in assets:
     if not (root/path).is_file():
         raise FileNotFoundError('Missing core offline resource: '+path)
+client=root/'assets/product.js'
+client_text=client.read_text(encoding='utf-8')
+# The page build identity has no circular dependency on the cache version.
+identity_parts=[]
+for file in assets:
+    raw=(root/file).read_bytes()
+    if file=='assets/product.js':
+        raw=raw.replace(b'\r\n',b'\n')
+        raw=re.sub(rb"const ROADBOOK_CLIENT_BUILD='[^']*';",b"const ROADBOOK_CLIENT_BUILD='';",raw)
+    identity_parts.append(raw)
+client_build=hashlib.sha256(b''.join(identity_parts)).hexdigest()[:16]
+client.write_text(re.sub(r"const ROADBOOK_CLIENT_BUILD='[^']*';","const ROADBOOK_CLIENT_BUILD='"+client_build+"';",client_text),encoding='utf-8',newline='\n')
 digest=hashlib.sha256(b''.join((root/file).read_bytes() for file in assets)).hexdigest()[:16]
 integrity={file:hashlib.sha256((root/file).read_bytes()).hexdigest() for file in assets}
-(root/'offline-manifest.json').write_text(json.dumps({'version':digest,'assets':assets,'integrity':integrity}),encoding='utf-8',newline='\n')
+(root/'offline-manifest.json').write_text(json.dumps({'version':digest,'clientBuild':client_build,'assets':assets,'integrity':integrity}),encoding='utf-8',newline='\n')
 print('Standalone essentials:',(root/'essentials.html').stat().st_size,'bytes; offline version:',digest)
 
 # A byte change makes browsers discover a new worker after each asset revision.
