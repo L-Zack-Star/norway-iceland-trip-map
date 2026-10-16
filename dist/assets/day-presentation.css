@@ -57,7 +57,7 @@ body[data-view=day] .day-timeline .journey-critical{font-size:11px;line-height:1
 .step-expanded[hidden]{display:none}
 .step-expanded{padding-top:8px;font-size:13px;line-height:1.7}
 .step-preview{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.step-open .step-preview{display:none}
-body[data-view=day] .day-timeline .step-locations{display:none;gap:6px;flex-wrap:wrap;margin-top:9px}
+body[data-view=day] .day-timeline .step-locations{display:none;gap:6px;flex-wrap:wrap;margin:9px 0 0 43px}
 body[data-view=day] .day-timeline .is-selected>.timeline-text>.step-locations,body[data-view=day] .day-timeline .step-open>.timeline-text>.step-locations{display:flex}
 body[data-view=day] .day-timeline .step-locations>button{font-size:11px;min-height:40px;border-radius:9px;padding:7px 9px;background:#ffffffbe;color:#1760bf;border:1px solid #d6e5f7;max-width:100%}
 body[data-view=day] .day-timeline .step-locations>[data-navigation]{background:#0866ff;color:#fff;border-color:#0866ff}
@@ -77,8 +77,13 @@ body[data-view=day] .day-timeline .timeline-row.is-current:after{background:#086
 
 .weather-options [data-weather-load]{display:inline-flex;min-height:44px;align-items:center;color:#1760bf;font-size:12px;margin:4px 0}
 
-.step-open:has(.place-inline) .step-photos{display:none}
+.step-open:has(.step-place-info) .step-photos{display:none}
 
 body[data-view=day] #mainShell.shell{display:block;max-width:none;width:100%;padding:0;margin-top:0}body[data-view=day] #mainPaper{width:100%;max-width:900px;margin:0 auto}body[data-view=day] .day-top-controls{border:0}body[data-view=day] .timeline-row,body[data-view=day] #todayStay{scroll-margin-top:76px}
 
 .day-time-value{display:inline-block;white-space:nowrap}
+
+body[data-view=day] .step-expanded{margin-left:43px;min-width:0}body[data-view=day] .step-place-info{min-width:0}body[data-view=day] .step-place-info img{max-width:100%;border-radius:8px}body[data-view=day] .step-expanded .step-description{margin:0 0 9px;font-size:12px;line-height:1.7}body[data-view=day] .step-place-info p{font-size:12px;line-height:1.7}body[data-view=day] .step-place-info ul{padding-left:18px;font-size:12px;line-height:1.7}
+@media(max-width:379px){body[data-view=day] .day-timeline .step-locations,body[data-view=day] .step-expanded{margin-left:39px}}
+
+body[data-view=day] .timeline-heading,body[data-view=day] .step-preview,body[data-view=day] .step-photos,body[data-view=day] .timeline-time{cursor:pointer}
