@@ -62,6 +62,7 @@ body[data-view=home] #page{padding-top:0}
 .home-summary-body time{font:500 11px/1.4 var(--sans);color:#17305d;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .home-step-icon{width:27px;height:27px;display:grid;place-items:center;border-radius:50%;background:#f1f6fb;color:#314d74}
 .home-step-icon svg{width:17px;height:17px}
+.home-summary-body .home-step-active .home-step-icon,.home-summary-body .home-step-active>button{color:#0866ff}
 .home-summary-body li>button{font:550 13px/1.45 var(--sans);color:#17305d;text-align:left;min-height:44px;padding:0;overflow-wrap:anywhere}
 .home-summary-body li.summary-ended{display:block;padding:10px 0 0 8px;font-size:13px}
 .summary-ended p{margin:0 0 8px;color:#536988}
