@@ -82,6 +82,15 @@ body[data-view=day] .day-timeline .timeline-row.is-current:after{background:#086
 body[data-view=day] #mainShell.shell{display:block;max-width:none;width:100%;padding:0;margin-top:0}body[data-view=day] #mainPaper{width:100%;max-width:900px;margin:0 auto}body[data-view=day] .day-top-controls{border:0}body[data-view=day] .timeline-row,body[data-view=day] #todayStay{scroll-margin-top:76px}
 
 .day-time-value{display:inline-block;white-space:nowrap}
+body[data-view=day] .day-timeline .timeline-time{align-self:start}
+body[data-view=day] .step-time-end{font:400 11px/1.6 var(--sans);color:#526c8d;margin:3px 0 3px 43px}
+body[data-view=day] .step-open.duration-in-description .step-duration{display:none}
+body[data-view=day] .day-top-controls{gap:8px}
+body[data-view=day] .day-top-controls>button{height:44px;min-height:44px;border:1px solid #e2ebf6;border-radius:12px}
+body[data-view=day] .day-top-controls .journey-date{height:44px;border:1px solid #e2ebf6;border-radius:12px;overflow:hidden;background:#fff}
+body[data-view=day] .day-top-controls select{min-height:42px;height:42px;background:transparent;border-radius:11px}
+body[data-view=day] .day-top-controls .journey-date:focus-within{outline:2px solid #0866ff;outline-offset:2px}
+@media(max-width:379px){body[data-view=day] .step-time-end{margin-left:39px}}
 
 body[data-view=day] .step-expanded{margin-left:43px;min-width:0}body[data-view=day] .step-place-info{min-width:0}body[data-view=day] .step-place-info img{max-width:100%;border-radius:8px}body[data-view=day] .step-expanded .step-description{margin:0 0 9px;font-size:12px;line-height:1.7}body[data-view=day] .step-place-info p{font-size:12px;line-height:1.7}body[data-view=day] .step-place-info ul{padding-left:18px;font-size:12px;line-height:1.7}
 @media(max-width:379px){body[data-view=day] .day-timeline .step-locations,body[data-view=day] .step-expanded{margin-left:39px}}

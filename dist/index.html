@@ -92,6 +92,11 @@ toolBody=function(k){k=toolboxCategory(k);const days=toolDay==='all'?DATA.days:D
 toolFilter=function(){return `<label class="tool-date-filter">${outlineIco('calendar')}<select id="toolDate" aria-label="筛选工具箱日期"><option value="all">全部日期</option>${DATA.days.map(d=>`<option value="${d.id}" ${toolDay===String(d.id)?'selected':''}>${toolboxDate(d)}</option>`).join('')}</select></label>`;};
 toolboxView=function(){toolCategory=toolboxCategory(toolCategory);return `<header class="utility-header tb-header"><h1>工具箱</h1><p>旅途中随时取用的信息</p></header><nav class="tool-categories" aria-label="工具分类">${toolboxTabs.map(([k,n,icon])=>`<button data-tool="${k}" aria-pressed="${toolCategory===k}">${ico(icon)}${n}</button>`).join('')}</nav><section class="tool-panel"><header class="tool-panel-head"><h2 id="toolTitle">${toolNames[toolCategory]}</h2><div id="toolFilter">${['activities','flights','hotels'].includes(toolCategory)?toolFilter():''}</div></header><div id="toolContent">${toolBody(toolCategory)}</div></section><footer class="tb-footer"><button data-credits>照片来源与许可</button></footer>`;};
 const toolboxBaseRender=renderTool;renderTool=function(){toolCategory=toolboxCategory(toolCategory);toolboxBaseRender();mountJourney();};
+// The legacy minute updater covers dated tabs; Other also contains dated purchases.
+const refreshOtherTools=()=>{if(state.view==='toolbox'&&toolCategory==='other')refreshTemporalTools();};
+window.addEventListener('focus',refreshOtherTools);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshOtherTools();});
+setInterval(refreshOtherTools,60000);
 
 if(state.view==="toolbox")render({restoreY:scrollY});
 });</script></body></html>

@@ -1,6 +1,20 @@
 'use strict';
 // Daily presentation consumes the existing schedule model without changing itinerary data.
 const dayPresentationMemory=new Map();
+// Compact summaries omit durations already shown separately; full source copy stays expandable.
+const dayConcisePreviews={
+ '1:晚餐':'吃快餐；如到市区吃，抵达后先用餐再游览。',
+ '3:晚餐':'晚餐A：Full Steam；晚餐B：回酒店吃泡面。',
+ '4:港边短逛':'酒店附近港边、Skansen一带短逛；冷、累或风大时回酒店休息。',
+ '6:白沙滩':'前往Ramberg，海滩短走，可按风雨情况缩短。',
+ '6:入住晚餐':'办理入住，沿Å Rorbuer木栈道、港口和老木屋散步后晚餐。',
+ '7:海岸短走':'前往Å镇村外停车场末端的海岸步道；时长含停车和找路。',
+ '13:前往冰湖':'从Hali出发，预留停车、缴费和找集合点的时间。',
+ '13:蓝冰洞':'超级吉普接驳、冰川徒步与蓝冰洞；午餐随导游安排，不另加下午景点。',
+ '13:返回Hali':'活动结束后取车返回Hali休息。',
+ '15:前往机场':'前往KEF机场区域，另留交通和休息余量。',
+ '16:小美人鱼':'从Østerport步行到小美人鱼；按雕像位置导航，避开码头外端。'
+};
 // Normalize visible luggage copy without changing raw itinerary keys or data.
 function normalizeLuggageDisplay(root){if(!root)return;if(root.nodeType===Node.TEXT_NODE){if(root.textContent.includes('取箱'))root.textContent=root.textContent.replace(/取箱/g,'取行李');return;}if(root.nodeType!==Node.ELEMENT_NODE)return;if(root.matches('script,style,textarea,input'))return;for(const attr of ['aria-label','title','alt']){const text=root.getAttribute(attr);if(text?.includes('取箱'))root.setAttribute(attr,text.replace(/取箱/g,'取行李'));}root.childNodes.forEach(normalizeLuggageDisplay);}
 for(const root of [document.getElementById('page'),document.getElementById('drawerBody')])if(root){normalizeLuggageDisplay(root);new MutationObserver(records=>{for(const r of records){if(r.type==='characterData')normalizeLuggageDisplay(r.target);else r.addedNodes.forEach(normalizeLuggageDisplay);}}).observe(root,{childList:true,subtree:true,characterData:true});}
@@ -13,12 +27,14 @@ renderTimeline=function(d){const tpl=document.createElement('template');tpl.inne
  const kind=homeStepIcon(r)==='pin'&&/驾驶|驾车|开往|自驾/.test(r.text||'')?'car':homeStepIcon(r);icon.innerHTML=ico(kind);const expanded=document.createElement('div');expanded.className='step-expanded';expanded.id='step-info-'+index;expanded.hidden=!memory.open.has(index);
  const critical=[...text.querySelectorAll(':scope > .journey-critical')],actions=text.querySelector(':scope > .step-locations');for(const child of [...text.children])if(child!==heading&&!critical.includes(child)&&child!==actions&&child!==duration)expanded.append(child);
  expanded.querySelectorAll('.place-inline').forEach(detail=>{const section=document.createElement('section');section.className='step-place-info';const content=detail.querySelector(':scope > .journey-detail-body');if(content)section.append(...content.childNodes);detail.replaceWith(section);});
- const preview=document.createElement('p');preview.className='step-preview';const plain=description?.textContent?.trim()||'';preview.textContent=plain.length>68?plain.slice(0,67)+'…':plain;
+ const preview=document.createElement('p');preview.className='step-preview';const plain=description?.textContent?.trim()||'',concise=dayConcisePreviews[d.id+':'+r.stepTitle]||plain;preview.textContent=concise.length>68?concise.slice(0,67)+'…':concise;
+ const durationTokens=duration?.textContent.match(/\d+(?:[–—-]\d+)?(?:分钟|小时)/g)||[];if(durationTokens.length&&durationTokens.every(token=>plain.replace(/\s/g,'').includes(token)))row.classList.add('duration-in-description');
  const toggle=document.createElement('button');toggle.className='step-expand';toggle.dataset.dayStepToggle=String(index);toggle.setAttribute('aria-controls',expanded.id);toggle.setAttribute('aria-expanded',String(!expanded.hidden));toggle.setAttribute('aria-label','展开'+journeyTitle(d,r)+'的简介与信息');toggle.innerHTML=dayChevron('right');heading.append(toggle);
  if(duration)heading.after(duration);if(plain)text.append(preview);critical.forEach(c=>text.append(c));
  const project=/蓝冰洞|浮潜|快艇|追鲸|观鲸|漫步|拍照|瀑布|沙滩|缆车|间歇泉|温泉|泡浴|教堂|新港|海鲜/.test(r.stepTitle||'');if(project){const existing=[...expanded.querySelectorAll('.step-place-info img')],keys=[...(r.nav||[]).filter(k=>smallPhoto(k))];const booked=DATA.bookings.find(b=>b.day===d.id&&r.stepTitle===({4:'追鲸',12:'冰湖快艇',13:'蓝冰洞',15:'峡谷浮潜'})[d.id]);if(booked&&!keys.includes(booked.spot)&&smallPhoto(booked.spot))keys.unshift(booked.spot);if(!existing.length)for(const key of keys.slice(0,2)){const img=document.createElement('img');img.src=smallPhoto(key);img.alt=DATA.places[key]?.name||journeyTitle(d,r);existing.push(img);}if(existing.length){const photos=document.createElement('div');photos.className='step-photos';existing.slice(0,2).forEach(src=>{const img=src.cloneNode(true);img.loading='lazy';img.decoding='async';img.width=240;img.height=150;photos.append(img);});text.append(photos);}}
  if(actions)text.append(actions);text.append(expanded);row.classList.toggle('is-selected',memory.selected===index);row.classList.toggle('step-open',!expanded.hidden);
  const time=row.querySelector('.timeline-time'),matches=r.time.match(/\d{1,2}:\d{2}/g);if(matches?.length===2&&/–|—|－|~|至/.test(r.time)){const zone=time.querySelector('small');time.innerHTML=`<time aria-label="${esc(r.time)}">${r.time.split(/[–—－~]|至/).map(esc).join('<br>')}</time>`+(zone?zone.outerHTML:'');}
+ if(matches?.length===3&&/约/.test(r.time)){time.innerHTML=`<time aria-label="${esc(r.time)}">${esc(matches[0])}</time>`;const end=document.createElement('p');end.className='step-time-end';end.textContent='预计结束 '+matches[1]+'–'+matches[2];(duration||heading).after(end);}
  row.querySelectorAll('.timeline-time').forEach(t=>{const walk=document.createTreeWalker(t,NodeFilter.SHOW_TEXT),nodes=[];while(walk.nextNode())nodes.push(walk.currentNode);for(const n of nodes){const parts=n.textContent.split(/(\d{1,2}:\d{2})/g);if(parts.length<2)continue;const frag=document.createDocumentFragment();parts.forEach((part,i)=>{if(i%2){const v=document.createElement('span');v.className='day-time-value';v.textContent=part;frag.append(v);}else frag.append(document.createTextNode(part));});n.replaceWith(frag);}});
  });tpl.content.querySelectorAll('#todayStay #todayStay').forEach(el=>el.removeAttribute('id'));return tpl.innerHTML;};
 const dayBaseView=dayView;
