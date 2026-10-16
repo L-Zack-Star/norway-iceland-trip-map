@@ -61,7 +61,7 @@ body[data-view=day] .day-timeline .step-locations{display:none;gap:6px;flex-wrap
 body[data-view=day] .day-timeline .is-selected>.timeline-text>.step-locations,body[data-view=day] .day-timeline .step-open>.timeline-text>.step-locations{display:flex}
 body[data-view=day] .day-timeline .step-locations>button{font-size:11px;min-height:40px;border-radius:9px;padding:7px 9px;background:#ffffffbe;color:#1760bf;border:1px solid #d6e5f7;max-width:100%}
 body[data-view=day] .day-timeline .step-locations>[data-navigation]{background:#0866ff;color:#fff;border-color:#0866ff}
-body[data-view=day] .day-timeline .timeline-row.is-current{border-left-width:1px;background:rgba(8,102,255,.065);border-color:#bcdffb}
+body[data-view=day] .day-timeline .timeline-row.is-current,body[data-view=day] .day-timeline .timeline-row.is-current.is-selected{border-left-width:1px;background:rgba(8,102,255,.065);border-color:#0866ff;box-shadow:inset 0 0 0 1px #0866ff}
 body[data-view=day] .day-timeline .timeline-row.is-selected{background:rgba(8,102,255,.065);border:1px solid #bcdffb}
 body[data-view=day] .day-timeline .timeline-row.is-selected:after{background:#0866ff;border-color:white;box-shadow:0 0 0 2px #cee7ff}
 body[data-view=day] .day-timeline .is-selected .step-icon{color:#0866ff;background:#dceeff;box-shadow:0 0 0 1px white}
