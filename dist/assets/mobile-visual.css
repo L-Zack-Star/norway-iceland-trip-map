@@ -40,7 +40,7 @@ body[data-view=home] #page{padding-top:0}
 .home-date-strip button[aria-pressed=true]{background:var(--blue);color:white;border-color:var(--blue);font-weight:550}
 .home-date-entry.visual-date-entry>[data-open-home-day]{flex:0 0 96px;width:auto;height:auto;min-height:52px;border:0;border-radius:11px;background:var(--blue);color:white;font-size:13px;margin:0;padding:8px}
 .journey-home-status{padding:0;margin:0;border:0}
-.home-all-dates{position:absolute;right:14px;bottom:8px;min-height:44px;padding:6px 10px;border:0;border-radius:8px;background:#ffffffdb;color:#314d6b;font:400 11px/1.4 var(--sans)}
+.home-all-dates{position:static;display:block;width:max-content;min-height:44px;padding:0;border:0;border-radius:0;background:transparent;color:#fff;text-align:left;text-shadow:0 1px 3px #10254d,0 0 8px #10254dcc;font:400 11px/1.4 var(--sans)}
 .home-date-entry.visual-date-entry{margin-bottom:12px}
 .home-summaries{border:0;display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .home-day-summary{border:1px solid #e7eff7;border-radius:16px;background:white;box-shadow:0 4px 15px #234b6a04;padding:12px;margin:0;min-width:0}
