@@ -3,7 +3,7 @@
 const journeyToday=()=>tripToday(new Date(),DATA.days,tripCalendarChanges).day;
 const journeyTitle=(d,r)=>d.id===3&&r.stepTitle==='桑拿备选'?'酒店泡浴':r.stepTitle||'行程安排';
 const journeyStages=[['1','出发 · 赫尔辛基'],['2,3,4,5','特罗姆瑟'],['6,7,8','罗弗敦'],['9','博德 → 奥斯陆'],['10','抵达冰岛'],['11','南岸 → 维克'],['12,13','冰河湖 · Hali'],['14','黄金圈'],['15','Silfra → 雷克雅未克'],['16','哥本哈根'],['17','返程 · 赫尔辛基'],['18','北京']];
-function journeyDate(value=state.day,mapMode=false){return `<label class="journey-date"><span>日期</span><select data-journey-date="${mapMode?'map':'day'}" aria-label="${mapMode?'地图日期':'行程日期'}">${DATA.days.map(d=>`<option value="${d.id}" ${d.id===+value?'selected':''}>${shortDate(d.date)} · ${d.title}</option>`).join('')}</select></label>`;}
+function journeyDate(value=state.day,mapMode=false){return `<label class="journey-date"><span>日期</span><select data-journey-date="${mapMode?'map':'day'}" aria-label="${mapMode?'地图日期':'行程日期'}">${DATA.days.map(d=>`<option value="${d.id}" ${d.id===+value?'selected':''}>${shortDate(d.date)} · ${mapMode?new Intl.DateTimeFormat("zh-CN",{weekday:"short",timeZone:"UTC"}).format(new Date(d.date+"T12:00:00Z")):d.title}</option>`).join('')}</select></label>`;}
 function journeyPosition(d,now=new Date(),rows=selectedPlan(d)){
  const pos=planPosition(d,now,rows),time=+now;
  const past=rows.map((r,i)=>{const w=stepWindow(d,r);if(!w)return /前一晚/.test(r.time);if(w.end!==null)return time>=w.end;const next=rows.slice(i+1).map(x=>stepWindow(d,x)).find(x=>x&&x.start>w.start);return !!next&&time>=next.start;});
@@ -101,3 +101,4 @@ toolBody=function(k){if(k==='emergency')return emergency();if(k==='roads')return
 
 const practicalPreviousToolBody=toolBody;
 toolBody=function(k){const base=practicalPreviousToolBody(k);return base+(typeof PRACTICAL_TRAVEL==='undefined'?'':k==='transport'?PRACTICAL_TRAVEL.tools():k==='flights'?PRACTICAL_TRAVEL.transportTools():'');};
+

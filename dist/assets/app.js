@@ -12,6 +12,18 @@ const solidGlyphs={
  food:'<path d="M2 1h1.6v6h1V1h1.6v6h1V1H9v6a4 4 0 0 1-2.7 3.8V23H4V10.8A4 4 0 0 1 2 7V1Zm16 0h2v22h-2V14h-4C14 6 15.2 2 18 1Z"/>',
  bag:'<path fill-rule="evenodd" d="M7 7V5a5 5 0 0 1 10 0v2h4v16H3V7h4Zm2 0h6V5a3 3 0 0 0-6 0v2Zm-2 3v3h2v-3H7Zm8 0v3h2v-3h-2Z"/>'
 };
+Object.assign(solidGlyphs,{
+ calendar:'<path fill-rule="evenodd" d="M6 1h2v3h8V1h2v3h2a2 2 0 0 1 2 2v15a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2V1ZM5 8v2h14V8H5Zm1 5v2h12v-2H6Zm0 4v2h9v-2H6Z"/>',
+ home:'<path d="m1 10 11-9 11 9-2 2-2-1.6V23h-5v-8h-4v8H5V10.4L3 12Z"/>',
+ map:'<path d="m2 4 6-2v19l-6 2Zm7-2 6 3v18l-6-3Zm7 3 6-3v18l-6 3Z"/>',
+ case:'<path fill-rule="evenodd" d="M8 2h8a2 2 0 0 1 2 2v2h4v7H2V6h4V4a2 2 0 0 1 2-2Zm0 4h8V4H8v2ZM2 14h8v2h4v-2h8v7a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-7Z"/>',
+ people:'<circle cx="9" cy="7" r="4"/><circle cx="18" cy="8" r="3"/><path d="M1 21v-3a8 8 0 0 1 16 0v3Zm17 0v-3a10 10 0 0 0-2-6 6 6 0 0 1 7 6v3Z"/>',
+ mountain:'<path d="m1 21 8-18 5 10 3-6 6 14H1Zm6-8 2-4 2 4-2-1Z" fill-rule="evenodd"/>',
+ camera:'<path fill-rule="evenodd" d="m8 3-2 3H2v16h20V6h-4l-2-3H8Zm4 5a6 6 0 1 0 0 12 6 6 0 0 0 0-12Zm0 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z"/>',
+ car:'<path fill-rule="evenodd" d="M6 2h12l3 6 2 3v10h-4v-3H5v3H1V11l2-3 3-6Zm1 2L5 9h14l-2-5H7ZM4 12v3h4v-3H4Zm12 0v3h4v-3h-4Z"/>',
+ boat:'<path d="M11 2h2v3h5v6l4 2-3 7H5l-3-7 4-2V5h5V2ZM8 7v3l4-2 4 2V7H8ZM1 22c3-2 4 1 7 0s4 1 7 0 5 1 8 0v2H1Z"/>',
+ train:'<path fill-rule="evenodd" d="M6 1h12a3 3 0 0 1 3 3v13a3 3 0 0 1-3 3l3 3h-3l-3-3H9l-3 3H3l3-3a3 3 0 0 1-3-3V4a3 3 0 0 1 3-3Zm0 4v6h5V5H6Zm7 0v6h5V5h-5ZM6 14v3h3v-3H6Zm9 0v3h3v-3h-3Z"/>'
+});
 const ico=n=>solidGlyphs[n]?`<svg class="ink-glyph" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${solidGlyphs[n]}</svg>`:outlineIco(n);
 
 function inline(s){const text=String(s??''),rx=/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s<>）)]+)/g;let out='',last=0,m;const fmt=t=>esc(t).replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/`([^`]+)`/g,'<code>$1</code>');while((m=rx.exec(text))){out+=fmt(text.slice(last,m.index));const url=m[2]||m[3];out+=`<a href="${esc(url)}" target="_blank" rel="noopener">${esc(m[1]||url)} ↗</a>`;last=rx.lastIndex;}return out+fmt(text.slice(last));}

@@ -45,7 +45,11 @@ function mergePlan(day,lanes){
 function selectedPlan(day,variants=state.variants,transport=state.transport){
  const branch=day.variants?.[variants[day.id]||'A'];let extra=branch?.timeline||[];
  if(day.id===1&&variants[1]==='B')extra=extra.filter(r=>transport==='train'?r.time!=='22:00前':transport==='taxi'?r.time!=='21:45':true);
- return mergePlan(day,[flightRows(day),day.timeline,extra]);
+ return mergePlan(day,[flightRows(day),day.timeline,extra]).map(r=>{
+  if(day.id===6&&r.stepTitle==='隧道排队')return {...r,nav:(r.nav||[]).filter(k=>k!=='ramberg')};
+  if(day.id===14&&r.stepTitle==='黄金圈转场')return {...r,nav:['vik',...(r.nav||[]).filter(k=>k!=='vik')]};
+  return r;
+ });
 }
 function bookingRow(day,booking,rows=selectedPlan(day)){let i=rows.findIndex(r=>/报到|集合/.test(r.stepTitle||'')&&r.time.includes(booking.report));if(i<0)i=rows.findIndex(r=>(r.nav||[]).includes(booking.spot));return i;}
 function selectedVisits(day){const rows=selectedPlan(day),items=[],route=selectedRoute(day);for(let i=0;i<rows.length;i++){const r=rows[i],booking=DATA.bookings.find(b=>b.day===day.id&&bookingRow(day,b,rows)===i);let keys=[...(booking?.parking?[booking.parking]:[]),...(r.nav||[]),...(booking?[booking.meeting||booking.spot]:[])];for(const key of [...new Set(keys)]){const alias=key.startsWith('hotel:')&&DATA.places[key.slice(6)]?key.slice(6):key;const p=DATA.places[alias]||(key.startsWith('hotel:')?DATA.hotels[key.slice(6)]:null);if(!p)continue;items.push({key:alias,p,day:day.id,step:i,time:r.time,title:r.stepTitle,kind:booking?.parking===key?'停车地点':booking&&(booking.meeting||booking.spot)===key?'集合 / 报到':'行程地点'});}}
