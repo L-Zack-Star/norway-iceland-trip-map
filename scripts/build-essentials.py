@@ -1,18 +1,30 @@
-"""Build a small standalone, printable roadbook from unchanged public DATA."""
+"""Build standalone reading and versioned core cache from the public source of truth."""
 from pathlib import Path
 import json,html,re,hashlib
 
 root=Path(__file__).resolve().parents[1]/'dist'
 source=(root/'assets/data.js').read_text(encoding='utf-8')
 data=json.JSONDecoder().raw_decode(source[source.index('const DATA=')+11:])[0]
-esc=lambda v:html.escape(re.sub(r'四(?:个行李箱|件行李|箱)|4个行李箱','行李',str(v or '')))
+esc=lambda v:html.escape(str(v or ''))
+def location_label(key):
+    item=data['hotels'].get(key[6:],{}) if key.startswith('hotel:') else data['places'].get(key,{})
+    parts=[]
+    for value in [item.get('name'),item.get('address') or item.get('en')]:
+        value=str(value or '').strip().strip('·').strip()
+        if value and re.sub(r'\s+','',value).casefold() not in [re.sub(r'\s+','',part).casefold() for p in parts for part in [p,*p.split(' · ')]]:
+            parts.append(value)
+    return ' · '.join(parts)
+def reading_time(day,row):
+    if day['id']==13 and row.get('stepTitle')=='蓝冰洞':
+        return '09:30开始 · 预计5–7小时（约14:30–16:30结束）'
+    return row['time']
 out=[]
 for day in data['days']:
     out.append(f'<section id="day-{day["id"]}"><h2>{esc(day["date"])} · {esc(day["title"])}</h2><p>{esc(day["region"])} · 时区 {esc(day["tz"])}</p><p>{esc(day["alert"])}</p>')
     for flight in day.get('flights',[]):
         out.append(f'<p><strong>{esc(flight[0])}</strong> {esc(flight[1])} {esc(flight[3])} → {esc(flight[4])} {esc(flight[6])} · 均为当地时间</p>')
     def rows(items):
-        return '<ol>'+''.join(f'<li><strong>{esc(row["time"])} · {esc(row.get("stepTitle"))}</strong><p>{esc(row["text"])}</p>'+(''.join(f'<p>地点：{esc(data["hotels"][key[6:]]["name"])} · {esc(data["hotels"][key[6:]]["address"])}</p>' if key.startswith('hotel:') else f'<p>地点：{esc(data["places"][key]["name"])} · {esc(data["places"][key].get("address",data["places"][key].get("en")))}</p>' for key in row.get('nav',[]) if key.startswith('hotel:') or key in data['places']))+'</li>' for row in items)+'</ol>'
+        return '<ol>'+''.join(f'<li><strong>{esc(reading_time(day,row))} · {esc(row.get("stepTitle", "").replace("取箱", "取行李"))}</strong><p>{esc(row["text"])}</p>'+''.join(f'<p>地点：{esc(location_label(key))}</p>' for key in row.get('nav',[]) if location_label(key))+'</li>' for row in items)+'</ol>'
     out.append(rows(day['timeline']))
     for key,branch in day.get('variants',{}).items():
         out.append(f'<h3>备选 {key} · {esc(branch["label"])}（根据实际情况选择）</h3>'+rows(branch['timeline']))
@@ -28,8 +40,18 @@ nav='<nav>'+''.join(f'<a href="#day-{d["id"]}">{esc(d["date"][5:])}</a>' for d i
 end='''<section><h2>应急电话（原路书资料）</h2><p>芬兰、冰岛、丹麦：<a href="tel:112">112</a>；挪威：医疗<a href="tel:113">113</a>、火警<a href="tel:110">110</a>、警方<a href="tel:112">112</a>。说明位置、路号和人数。</p><h3>京东安联保险</h3><p>境外：<a href="tel:+8652780900000">+86 527 8090 0000</a>；境内：<a href="tel:950610">950610</a>。救援范围与费用按保险合同处理。<a href="https://www.jdallianz.com/bxsc/product/detail?p=2379">官方说明</a></p><h3>道路救援</h3><p>租车故障先联系租车公司，安排救援前确认保险授权与费用。</p><p>挪威REDGO：<a href="tel:98702222">987 02222</a>；国际拨号：<a href="tel:+4733138080">+47 33 13 80 80</a>。<a href="https://www.redgo.no/om-redgo/kontakt-oss">官方联系方式</a></p><p>冰岛FÍB Assistance：<a href="tel:+3545112112">+354 5 112 112</a>。FÍB会员救援服务；非会员及租赁车辆先询问是否受理和收费。<a href="https://www.fib.is/is/english">官方说明</a></p><p>天气、道路、机场状态须向官方查询，离线页不包含实时状态。</p></section></body></html>'''
 (root/'essentials.html').write_text(head+nav+''.join(out)+end,encoding='utf-8',newline='\n')
 assets=['index.html','essentials.html','favicon.svg','assets/data.js','assets/app.js','assets/trip-model.js','assets/journal.js','assets/product-views.js','assets/product-map.js','assets/product.js','assets/share.js','share/poster-2026-v4.jpg','share/qr-2026.svg','assets/legacy.css','assets/journal.css','assets/product.css','assets/travel-support.js','assets/journey-views.js','assets/journey.css','assets/road-routes.js','assets/travel-practical.js','assets/mobile-visual.js','assets/mobile-visual.css','assets/illustrated-atlas.js','assets/illustrated-atlas.css','assets/day-presentation.js','assets/day-presentation.css','assets/weather-mountains-v1.webp']
+
+# Discover same-origin core dependencies from the actual shipped HTML; omissions fail the build.
+page=(root/'index.html').read_text(encoding='utf-8')
+for path in re.findall(r'<(?:script|link)\b[^>]*(?:src|href)=[\'\"]([^\'\"]+)[\'\"]',page):
+    if path.startswith('assets/') and path.split('?')[0] not in assets:
+        assets.append(path.split('?')[0])
+for path in assets:
+    if not (root/path).is_file():
+        raise FileNotFoundError('Missing core offline resource: '+path)
 digest=hashlib.sha256(b''.join((root/file).read_bytes() for file in assets)).hexdigest()[:16]
-(root/'offline-manifest.json').write_text(json.dumps({'version':digest,'assets':assets}),encoding='utf-8',newline='\n')
+integrity={file:hashlib.sha256((root/file).read_bytes()).hexdigest() for file in assets}
+(root/'offline-manifest.json').write_text(json.dumps({'version':digest,'assets':assets,'integrity':integrity}),encoding='utf-8',newline='\n')
 print('Standalone essentials:',(root/'essentials.html').stat().st_size,'bytes; offline version:',digest)
 
 # A byte change makes browsers discover a new worker after each asset revision.
