@@ -1,0 +1,44 @@
+{
+  "generatedAt": "2026-10-19T09:09:36.184017Z",
+  "flights": {
+    "2026-10-19:AY913": {
+      "arrival": {
+        "airport": "OSL",
+        "scheduled": "2026-10-19T10:05:00Z",
+        "code": "E",
+        "time": "2026-10-19T10:26:00Z",
+        "gate": "",
+        "belt": "",
+        "delayed": true,
+        "checkedAt": "2026-10-19T09:09:36.184017Z",
+        "sourceUpdatedAt": "2026-10-19T09:09:44.913766Z"
+      }
+    },
+    "2026-10-19:DY328": {
+      "departure": {
+        "airport": "OSL",
+        "scheduled": "2026-10-19T17:50:00Z",
+        "code": "E",
+        "time": "2026-10-19T17:50:00Z",
+        "gate": "A2",
+        "belt": "",
+        "delayed": false,
+        "checkedAt": "2026-10-19T09:09:36.184017Z",
+        "sourceUpdatedAt": "2026-10-19T09:09:44.913766Z"
+      },
+      "arrival": {
+        "airport": "TOS",
+        "scheduled": "2026-10-19T19:45:00Z",
+        "code": "E",
+        "time": "2026-10-19T19:37:33Z",
+        "gate": "",
+        "belt": "",
+        "delayed": false,
+        "checkedAt": "2026-10-19T09:09:36.184017Z",
+        "sourceUpdatedAt": "2026-10-19T09:09:43.743962Z"
+      }
+    }
+  },
+  "errors": {},
+  "refreshMinutes": 5
+}

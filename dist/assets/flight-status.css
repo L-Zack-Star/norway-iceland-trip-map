@@ -1,0 +1,9 @@
+.flight-live{margin:9px 0 5px;font-size:12px;line-height:1.65;color:#496270;max-width:100%;overflow-wrap:anywhere}
+.flight-live-line,.flight-live-meta{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px}
+.flight-live-tag{font-size:11px;font-weight:600;background:#e9eff0;color:#365c62;border-radius:4px;padding:1px 6px;white-space:nowrap}
+.flight-live-tag.attention{background:#fff0df;color:#99510e}
+.flight-live-meta{margin-top:3px;font-size:10px;color:#71818a;gap:2px 9px}
+.flight-live-meta button,.flight-live-meta a{font:inherit;color:inherit;background:none;border:0;text-decoration:none;padding:5px 0;min-height:28px;cursor:pointer}
+.flight-live-meta a:hover,.flight-live-meta button:hover{text-decoration:underline}
+.flight-live-meta button:disabled{opacity:.6;cursor:wait}
+.flight-live-meta button:focus-visible,.flight-live-meta a:focus-visible{outline:2px solid #496270;outline-offset:3px}

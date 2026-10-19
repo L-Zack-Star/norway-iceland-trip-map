@@ -3,6 +3,8 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    - cron: "*/5 * 18,19,22,25,26,27 10 *"
 permissions:
   contents: read
   pages: write
@@ -21,15 +23,23 @@ jobs:
       - name: Configure Pages
         id: pages
         uses: actions/configure-pages@v5
+      - name: Fetch official flight observations
+        id: flights
+        env:
+          SITE_URL: ${{ steps.pages.outputs.base_url }}
+        run: python3 scripts/update-flights.py
       - name: Set production canonical and share URLs
+        if: steps.flights.outputs.publish == 'true'
         env:
           SITE_URL: ${{ steps.pages.outputs.base_url }}
         run: python3 scripts/configure-pages.py
       - uses: actions/upload-pages-artifact@v3
+        if: steps.flights.outputs.publish == 'true'
         with:
           path: dist
           name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Deploy
+        if: steps.flights.outputs.publish == 'true'
         id: deployment
         uses: actions/deploy-pages@v4
         with:
