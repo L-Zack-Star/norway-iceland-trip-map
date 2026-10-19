@@ -1,7 +1,7 @@
-/* Roadbook revision: a82fb9991cb89c41 */
+/* Roadbook revision: b2759b212275a5af */
 /* A release keeps core HTML/JS/data together until the user accepts its update. */
 'use strict';
-const ROADBOOK_VERSION='a82fb9991cb89c41';
+const ROADBOOK_VERSION='b2759b212275a5af';
 const CACHE='nordic-roadbook-'+ROADBOOK_VERSION;
 const PIN_CACHE='nordic-roadbook-client-pins',PIN_URL=new URL('__roadbook_client_versions__',self.registration.scope).href;
 const UPDATE_CLIENT_URL=new URL('__roadbook_update_client__',self.registration.scope);
