@@ -5,6 +5,7 @@ from zoneinfo import ZoneInfo
 from concurrent.futures import ThreadPoolExecutor
 from urllib.request import Request, urlopen
 from urllib.parse import urlencode
+from urllib.error import HTTPError
 import json, os, re, xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -96,6 +97,7 @@ def main():
             with open(os.environ['GITHUB_OUTPUT'], 'a') as out: out.write('publish=false\n')
         return
     target = ROOT / 'dist/flight-status.json'
+    seed = json.loads(target.read_text()) if target.exists() else {}
     previous = {}
     public = os.environ.get('SITE_URL', 'https://l-zack-star.github.io/norway-iceland-trip-map/').rstrip('/')
     try:
@@ -103,7 +105,15 @@ def main():
     except Exception:
         if target.exists(): previous = json.loads(target.read_text())
     allowed = {f['key'] for f in flights}
-    records = {k: v for k, v in previous.get('flights', {}).items() if k in allowed}
+    records = {}
+    # Preserve the newest verified observation per side, including the shipped seed.
+    for snapshot in (seed, previous):
+        for key, sides in snapshot.get('flights', {}).items():
+            if key not in allowed: continue
+            for side, observation in sides.items():
+                old = records.setdefault(key, {}).get(side)
+                if not old or instant(observation['checkedAt']) >= instant(old['checkedAt']):
+                    records[key][side] = observation
     airports = sorted({a for f in active for a in (f['from'], f['to']) if a in NORWAY})
     def fetch(airport):
         try:
@@ -129,12 +139,12 @@ def main():
             if not isinstance(rows, list): raise ValueError('Unexpected CPH response')
             return collect_cph(rows, flights, direction, checked), None
         except Exception as error:
-            return {}, type(error).__name__
+            return {}, ('HTTP ' + str(error.code)) if isinstance(error, HTTPError) else type(error).__name__
     with ThreadPoolExecutor(max_workers=3) as pool:
         for found, error in pool.map(fetch_cph, tasks):
             if error: errors['CPH'] = error
             for key, sides in found.items(): records.setdefault(key, {}).update(sides)
-    coverage = {a: {'connected': a in NORWAY or a == 'CPH'} for a in ZONES}
+    coverage = {a: {'connected': a in NORWAY or a == 'CPH', 'available': a not in errors and (a in NORWAY or a == 'CPH')} for a in ZONES}
     target.write_text(json.dumps({'generatedAt': checked, 'flights': records,
         'errors': errors, 'coverage': coverage, 'refreshMinutes': 5}, ensure_ascii=False, indent=2) + '\n')
     if os.environ.get('GITHUB_OUTPUT'):

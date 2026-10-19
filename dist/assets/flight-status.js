@@ -37,7 +37,8 @@
   const connected=[f[1],f[4]].some(a=>snapshot?.coverage?.[a]?.connected);
   const unavailable=!sides.length&&!connected?'暂无法自动获取 · 请查官方':!sides.length&&Date.parse(d.date+'T00:00:00Z')-Date.now()>48*3600000?'尚未公布当日动态':!sides.length?'暂未获取机场动态':'';
   const sources=[...new Map(sides.map(s=>[s.source||'Avinor',{name:s.source||'Avinor',url:s.sourceUrl||'https://www.avinor.no/'}])).values()];
-  const note=scheduleOnly?'临近起飞更新动态':!navigator.onLine?'离线 · 上次数据':failed?'更新失败':stale&&sides.length&&!historical?'数据已过期':unavailable;
+  const sourceError=[f[1],f[4]].some(a=>snapshot?.errors?.[a]);
+  const note=sourceError?'机场数据更新失败':scheduleOnly?'临近起飞更新动态':!navigator.onLine?'离线 · 上次数据':failed?'更新失败':stale&&sides.length&&!historical?'数据已过期':unavailable;
   return `<div class="flight-live-line"><span class="flight-live-tag ${cancelled||label==='延误'?'attention':''}">${esc(tag)}</span>${items.length?`<span>${esc(items.join(' · '))}</span>`:''}</div><div class="flight-live-meta">${date?`<span>数据 ${esc(date)}（出发地时间）</span>`:''}${note?`<span>${esc(note)}</span>`:''}<button type="button" data-flight-refresh aria-label="刷新${esc(f[0])}航班动态" ${inflight?'disabled':''}>${inflight?'更新中…':'刷新 ↻'}</button><a href="${esc(official(f))}" target="_blank" rel="noopener noreferrer">官方查询 ↗</a>${sources.map(s=>`<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.name==='Avinor'?'Flight data from Avinor':s.name)}</a>`).join('')}</div>`;
  }
  function paint(){
