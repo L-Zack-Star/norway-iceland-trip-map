@@ -5,6 +5,7 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "*/5 * 18,19,22,25,26,27 10 *"
+    - cron: "*/5 * 2,3,4 11 *"
 permissions:
   contents: read
   pages: write

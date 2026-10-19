@@ -11,7 +11,7 @@
   if(f[1]==='HEL')return 'https://www.finavia.fi/en/airports/helsinki-airport/flights?tab=departures';
   const names={OSL:'oslo',TOS:'tromso',LKN:'leknes',SVJ:'svolvaer',BOO:'bodo'};
   if(names[f[1]])return 'https://www.avinor.no/en/airport/'+names[f[1]]+'/departures/';
-  if(f[1]==='KEF')return 'https://www.kefairport.com/flights';
+  if(f[1]==='KEF')return 'https://www.kefairport.is/en/flights';
   if(f[1]==='CPH')return 'https://www.cph.dk/en/flight-information/departures';
   return 'https://www.csair.com/en/';
  }
@@ -20,21 +20,25 @@
   const r=snapshot?.flights?.[key(d,f)],dep=r?.departure,arr=r?.arrival;
   const sides=[dep,arr].filter(Boolean),latest=sides.map(s=>Date.parse(s.checkedAt)).filter(Number.isFinite).sort((a,b)=>b-a)[0];
   const stale=failed||!navigator.onLine||sides.some(s=>Date.now()-Date.parse(s.checkedAt)>15*60000);
-  const cancelled=sides.some(s=>s.code==='C'),landed=arr?.code==='A',departed=dep?.code==='D';
+  const scheduleOnly=sides.length>0&&sides.every(s=>s.scheduleOnly);
+  const cancelled=sides.some(s=>s.code==='C'),landed=['A','H'].includes(arr?.code),departed=dep?.code==='D';
   const delta=s=>s?.code==='E'&&s.time?Math.round((Date.parse(s.time)-Date.parse(s.scheduled))/60000):0;
-  let label=cancelled?'已取消':landed?'已到达':departed?'已出发':sides.some(s=>s.delayed)||sides.some(s=>delta(s)>0)?'延误':sides.length?'航班动态':'暂无动态';
+  let label=cancelled?'已取消':arr?.code==='H'?'行李提取中':landed?'已到达':departed?'已出发':dep?.code==='B'?'登机中':dep?.code==='G'?'登机口关闭':dep?.code==='T'?'前往登机口':sides.some(s=>s.delayed)||sides.some(s=>delta(s)>0)?'延误':scheduleOnly?'计划航班':sides.length?'航班动态':'暂无动态';
   let items=[];
-  if(dep?.time&&['D','E'].includes(dep.code))items.push((dep.code==='D'?'实际出发 ':'预计出发 ')+format(dep.time,f[1]));
-  if(arr?.time&&['A','E'].includes(arr.code))items.push((arr.code==='A'?'实际到达 ':'预计到达 ')+format(arr.time,f[4]));
+  if(dep?.time&&['D','E','B','G','T'].includes(dep.code))items.push((dep.code==='D'?'实际出发 ':scheduleOnly?'机场公布出发 ':'预计出发 ')+format(dep.time,f[1]));
+  if(arr?.time&&['A','E'].includes(arr.code))items.push((arr.code==='A'?'实际到达 ':scheduleOnly?'机场公布到达 ':'预计到达 ')+format(arr.time,f[4]));
   if(!cancelled&&!landed&&!departed)items.push(dep?.gate?'登机口 '+dep.gate:dep?'登机口待公布':'登机口见官方');
   if(landed&&arr?.belt)items.push('行李转盘 '+arr.belt);
   const delay=delta(dep)||delta(arr);if(delay>0&&!cancelled&&!landed)items.push((delta(dep)>0?'出发':'到达')+'延误 '+delay+'分钟');
   if(cancelled)items=[];
-  const historical=landed||cancelled;
+  const historical=landed||cancelled||scheduleOnly;
   const tag=stale&&sides.length&&!historical?'上次：'+label:label;
   const date=latest?new Intl.DateTimeFormat('zh-CN',{timeZone:zones[f[1]],month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(latest)):'';
-  const note=!navigator.onLine?'离线 · 上次数据':failed?'更新失败':stale&&sides.length&&!historical?'数据已过期':!sides.length?'暂未获取机场动态':'';
-  return `<div class="flight-live-line"><span class="flight-live-tag ${cancelled||label==='延误'?'attention':''}">${esc(tag)}</span>${items.length?`<span>${esc(items.join(' · '))}</span>`:''}</div><div class="flight-live-meta">${date?`<span>数据 ${esc(date)}（出发地时间）</span>`:''}${note?`<span>${esc(note)}</span>`:''}<button type="button" data-flight-refresh aria-label="刷新${esc(f[0])}航班动态" ${inflight?'disabled':''}>${inflight?'更新中…':'刷新 ↻'}</button><a href="${esc(official(f))}" target="_blank" rel="noopener noreferrer">官方查询 ↗</a>${sides.length?'<a href="https://www.avinor.no/" target="_blank" rel="noopener noreferrer">Flight data from Avinor</a>':''}</div>`;
+  const connected=[f[1],f[4]].some(a=>snapshot?.coverage?.[a]?.connected);
+  const unavailable=!sides.length&&!connected?'暂无法自动获取 · 请查官方':!sides.length&&Date.parse(d.date+'T00:00:00Z')-Date.now()>48*3600000?'尚未公布当日动态':!sides.length?'暂未获取机场动态':'';
+  const sources=[...new Map(sides.map(s=>[s.source||'Avinor',{name:s.source||'Avinor',url:s.sourceUrl||'https://www.avinor.no/'}])).values()];
+  const note=scheduleOnly?'临近起飞更新动态':!navigator.onLine?'离线 · 上次数据':failed?'更新失败':stale&&sides.length&&!historical?'数据已过期':unavailable;
+  return `<div class="flight-live-line"><span class="flight-live-tag ${cancelled||label==='延误'?'attention':''}">${esc(tag)}</span>${items.length?`<span>${esc(items.join(' · '))}</span>`:''}</div><div class="flight-live-meta">${date?`<span>数据 ${esc(date)}（出发地时间）</span>`:''}${note?`<span>${esc(note)}</span>`:''}<button type="button" data-flight-refresh aria-label="刷新${esc(f[0])}航班动态" ${inflight?'disabled':''}>${inflight?'更新中…':'刷新 ↻'}</button><a href="${esc(official(f))}" target="_blank" rel="noopener noreferrer">官方查询 ↗</a>${sources.map(s=>`<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.name==='Avinor'?'Flight data from Avinor':s.name)}</a>`).join('')}</div>`;
  }
  function paint(){
   for(const el of document.querySelectorAll('[data-flight-key]')){
